@@ -11,6 +11,13 @@ import (
 
 const g string = "git"
 
+type RepoType int
+
+const (
+	Working RepoType = iota
+	Bare
+)
+
 type GitRepo struct {
 	Dir string
 }
@@ -27,19 +34,20 @@ func NewGitRepo(dir string) (*GitRepo, error) {
 	}, nil
 }
 
-func (r *GitRepo) Command(arg ...string) *exec.Cmd {
+func (r *GitRepo) command(arg ...string) *exec.Cmd {
 	cmd := exec.Command(g, arg...)
 	cmd.Dir = r.Dir
-
 	return cmd
 }
 
-func (r *GitRepo) Init(bare bool) error {
-	checkFile := ".git"
+func (r *GitRepo) Init(rT RepoType) error {
 
-	args := [2]string{"init"}
-	if bare {
-		args[1] = "--bare"
+	checkFile := ".git/config"
+	args := make([]string, 0, 2)
+	args = append(args, "init")
+
+	if rT == Bare {
+		args = append(args, "--bare")
 		checkFile = "config"
 	}
 
@@ -51,21 +59,24 @@ func (r *GitRepo) Init(bare bool) error {
 		return fmt.Errorf("couldn't stat the directory %w", err)
 	}
 
-	cmd := r.Command(args[:]...)
-	output, err := cmd.Output()
-	fmt.Println("OUTPUT", string(output))
+	cmd := r.command(args[:]...)
+	output, err := cmd.CombinedOutput()
+	fmt.Println("OUTPUT", string(output), cmd, err)
 	return err
 }
 
-func (r *GitRepo) IsBare() (bool, error) {
-	cmd := r.Command("rev-parse", "--is-bare-repository")
+func (r *GitRepo) Type() (RepoType, error) {
+	cmd := r.command("rev-parse", "--is-bare-repository")
 
 	//TODO Caputre stderr&stdout for error reporting
 	output, err := cmd.Output()
 	if err != nil {
-		return false, fmt.Errorf("couldn't execute git rev parse, output: %s, error: %w", output, err)
+		return Working, fmt.Errorf("couldn't execute git rev parse, output: %s, error: %w", output, err)
 	}
 
 	cleaned := strings.TrimSpace(string(output))
-	return cleaned == "true", nil
+	if cleaned == "true" {
+		return Bare, nil
+	}
+	return Working, nil
 }

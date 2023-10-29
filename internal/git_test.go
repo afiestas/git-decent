@@ -34,7 +34,7 @@ func TestNewGitRepo(t *testing.T) {
 
 func TestCommandWrapper(t *testing.T) {
 	repo := GitRepo{Dir: "some-dir"}
-	cmd := repo.Command("some-cmd", "some-arg")
+	cmd := repo.command("some-cmd", "some-arg")
 	assert.Equal(t, cmd.Dir, "some-dir", "cwd is to be set to the repo basedir")
 }
 
@@ -42,20 +42,39 @@ func TestInit(t *testing.T) {
 	t.Run("Initialize bare", func(t *testing.T) {
 		dir, err := os.MkdirTemp("", "git-decent-")
 		require.NoError(t, err, "couldn't get temp dir for fixtures")
-		// defer os.RemoveAll(dir)
+		defer os.RemoveAll(dir)
 
 		repo, err := NewGitRepo(dir)
 		assert.NoError(t, err, "repo should be returned without errors")
 
-		err = repo.Init(true)
+		err = repo.Init(Bare)
 		assert.NoError(t, err, "repo should initialized without errors")
 
-		isBare, err := repo.IsBare()
-		assert.NoError(t, err, "isBare should not return any errors")
+		rT, err := repo.Type()
+		assert.NoError(t, err, "Type should not return any errors")
 
-		assert.True(t, isBare, "repo should be bare")
+		assert.Equal(t, rT, Bare, "repo should be bare")
 
-		err = repo.Init(true)
+		err = repo.Init(Bare)
+		assert.ErrorContains(t, err, "repository already initialized")
+	})
+	t.Run("Initialize working", func(t *testing.T) {
+		dir, err := os.MkdirTemp("", "git-decent-")
+		require.NoError(t, err, "couldn't get temp dir for fixtures")
+		defer os.RemoveAll(dir)
+
+		repo, err := NewGitRepo(dir)
+		assert.NoError(t, err, "repo should be returned without errors")
+
+		err = repo.Init(Working)
+		assert.NoError(t, err, "repo should initialized without errors")
+
+		rT, err := repo.Type()
+		assert.NoError(t, err, "Type should not return any errors")
+
+		assert.Equal(t, rT, Working, "repo should be working")
+
+		err = repo.Init(Working)
 		assert.ErrorContains(t, err, "repository already initialized")
 	})
 }
