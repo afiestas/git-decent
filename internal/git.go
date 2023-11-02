@@ -80,3 +80,23 @@ func (r *GitRepo) Type() (RepoType, error) {
 	}
 	return Working, nil
 }
+
+func (r *GitRepo) SetOrigin(url string) error {
+	cmd := r.command("remote", "add", "origin", url)
+	o, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("couldn't get the remote for origin =%s= %w", o, err)
+	}
+
+	return nil
+}
+
+func (r *GitRepo) Origin() (string, error) {
+	cmd := r.command("remote", "get-url", "origin")
+	output, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("couldn't get the remote for origin %w", err)
+	}
+
+	return strings.TrimSpace(string(output)), nil
+}
