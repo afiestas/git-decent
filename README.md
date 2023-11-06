@@ -46,3 +46,33 @@ commits to your personal work-in-progress branch (myWIPBranch), as doing so will
 integration systems or send messages to the team's chat.
 
 Feel free to contribute to Git-Decent and make your nocturnal coding sessions a bit more "decent"!
+
+## Dependencies
+While on v0 git-decent used go-git we decided to rewrite it in v1 to use git commands instead because
+handling signing (ssh/gpg) was too much of a hussle, specially the interaction with the agents.
+
+Since this is a git companion tool it should be kind of safe to assume that git is installed. It is also
+kind of safe to assuem that gpg/ssh/etc are properly configured in the system if the amended commit was
+signed.
+
+## TODO
+-  Parse configuration ✅
+    - go git ✅
+    - parse days ✅
+    - ranges ✅
+-  Create default config if not cofigured
+    - Show table
+-  Calcualte new date
+    - Based on latest commit date
+    - Based on configured ranges
+    - Allocation logic
+        - Natural flow
+            - Will start counting from last commit if last commit was done within range
+        - Compact
+            - Will add some random variance between commits
+        - Explicit
+            - Will require some sort of command like git-decent init work
+- Hook installation
+    - Create the post commit hook that will call git-decent
+    - Create the pre push hook that will check for ranges
+- Default command will check for unpushed changes and amend those
