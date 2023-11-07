@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"testing"
 	"time"
 )
 
@@ -16,8 +17,16 @@ type RepositoryBuilder struct {
 	randomCommits []Commit
 }
 
-func NewRepositoryBuilder() *RepositoryBuilder {
-	return &RepositoryBuilder{initialize: true}
+func NewRepositoryBuilder(t *testing.T) *RepositoryBuilder {
+	rb := &RepositoryBuilder{initialize: true}
+	if t != nil {
+		t.Cleanup(func() {
+			if rb.dir != "" {
+				os.RemoveAll(rb.dir)
+			}
+		})
+	}
+	return rb
 }
 
 func (rb *RepositoryBuilder) At(path string) *RepositoryBuilder {
