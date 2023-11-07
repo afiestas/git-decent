@@ -3,13 +3,17 @@ package internal
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"time"
 )
 
 type RepositoryBuilder struct {
-	repoType   RepoType
-	dir        string
-	origin     string
-	initialize bool
+	repoType      RepoType
+	dir           string
+	origin        string
+	initialize    bool
+	commits       []Commit
+	randomCommits []Commit
 }
 
 func NewRepositoryBuilder() *RepositoryBuilder {
@@ -29,6 +33,16 @@ func (rb *RepositoryBuilder) As(rt RepoType) *RepositoryBuilder {
 
 func (rb *RepositoryBuilder) WithOrigin(remote string) *RepositoryBuilder {
 	rb.origin = remote
+	return rb
+}
+
+func (rb *RepositoryBuilder) AddCommit(commit *Commit) *RepositoryBuilder {
+	rb.commits = append(rb.commits, *commit)
+	return rb
+}
+
+func (rb *RepositoryBuilder) AddRandomCommit() *RepositoryBuilder {
+	rb.randomCommits = append(rb.randomCommits, Commit{})
 	return rb
 }
 
@@ -62,5 +76,57 @@ func (rb *RepositoryBuilder) Build() (*GitRepo, error) {
 		}
 	}
 
+	for _, commit := range rb.commits {
+		for _, file := range commit.Files {
+			_, err := os.Stat(filepath.Join(rb.dir, file))
+			if err != nil {
+				return nil, fmt.Errorf("couldn't add file %w", err)
+			}
+		}
+		err := repo.Commit(&commit)
+		if err != nil {
+			return nil, fmt.Errorf("couldn't create commit %w", err)
+		}
+	}
+
 	return repo, nil
+}
+
+func createFileInRepo(baseDir string) (string, error) {
+	i := 0
+	prefix := "fixture_"
+	fname := ""
+	createFile := ""
+	for {
+		fname = fmt.Sprintf("%s_%d", prefix, i)
+		createFile = filepath.Join(baseDir, fname)
+		_, err := os.Stat(createFile)
+		if err == nil {
+			continue //File already exists
+		} else if err != os.ErrNotExist {
+			return "", fmt.Errorf("couldn't stat fixture file %w", err)
+		}
+
+		err = os.WriteFile(createFile, []byte(fname), 0666)
+
+		if err != nil {
+			return "", fmt.Errorf("couldn't write fixture file %w", err)
+		}
+
+		return fname, nil
+	}
+}
+
+func newFixtureCommit(repo *GitRepo) (*Commit, error) {
+
+	fname, err := createFileInRepo(repo.Dir)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create fixture file %w", err)
+	}
+	return &Commit{
+		Message: fmt.Sprintf("Some commit message for %s", fname),
+		Date:    time.Date(2000, 12, 20, 1, 2, 3, 4, time.UTC),
+		Author:  "Git test test@git-decent.git",
+		Files:   []string{"fname"},
+	}, nil
 }

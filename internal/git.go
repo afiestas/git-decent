@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 const g string = "git"
@@ -22,6 +23,13 @@ type GitRepo struct {
 	Dir string
 }
 
+type Commit struct {
+	Message string
+	Date    time.Time
+	Author  string
+	Files   []string
+}
+
 func NewGitRepo(dir string) (*GitRepo, error) {
 	if i, err := os.Stat(dir); err != nil {
 		return nil, fmt.Errorf("couldn't stat directory %w", err)
@@ -35,6 +43,7 @@ func NewGitRepo(dir string) (*GitRepo, error) {
 }
 
 func (r *GitRepo) command(arg ...string) *exec.Cmd {
+	fmt.Println(arg)
 	cmd := exec.Command(g, arg...)
 	cmd.Dir = r.Dir
 	return cmd
@@ -99,4 +108,25 @@ func (r *GitRepo) Origin() (string, error) {
 	}
 
 	return strings.TrimSpace(string(output)), nil
+}
+
+func (r *GitRepo) Commit(commit *Commit) error {
+	cmd := r.command(append([]string{"add"}, commit.Files...)...)
+	output, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("couldn't add files %s, %w", output, err)
+	}
+
+	cmd = r.command(
+		"commit",
+		"-m", commit.Message,
+		fmt.Sprintf("--author=%s", commit.Author),
+		fmt.Sprintf("--date=%s", commit.Date.Format("2006-01-02T15:04:05-07:00")),
+	)
+	output, err = cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("couldn't create a commit %s, %w", output, err)
+	}
+
+	return nil
 }
