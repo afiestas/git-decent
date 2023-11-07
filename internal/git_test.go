@@ -42,12 +42,6 @@ func TestNewGitRepo(t *testing.T) {
 	assert.NotEmpty(t, repo.Dir, "the returned repo should have the Dir initialized")
 }
 
-func TestCommandWrapper(t *testing.T) {
-	repo := GitRepo{Dir: "some-dir"}
-	cmd := repo.command("some-cmd", "some-arg")
-	assert.Equal(t, cmd.Dir, "some-dir", "cwd is to be set to the repo basedir")
-}
-
 func TestInit(t *testing.T) {
 	t.Run("Initialize bare", func(t *testing.T) {
 		repo, err := NewGitRepo(createTempDir(t, "git-decent-"))

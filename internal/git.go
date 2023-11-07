@@ -2,6 +2,7 @@
 package internal
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -42,11 +43,19 @@ func NewGitRepo(dir string) (*GitRepo, error) {
 	}, nil
 }
 
-func (r *GitRepo) command(arg ...string) *exec.Cmd {
+func (r *GitRepo) command(arg ...string) (string, error) {
 	fmt.Println(arg)
 	cmd := exec.Command(g, arg...)
 	cmd.Dir = r.Dir
-	return cmd
+	var stdoutBuf, stderrBuf bytes.Buffer
+	cmd.Stdout = &stdoutBuf
+	cmd.Stderr = &stderrBuf
+
+	err := cmd.Run()
+	if err != nil {
+		return "", fmt.Errorf("git command error %s %s %w", cmd.Stdout, cmd.Stderr, err)
+	}
+	return stdoutBuf.String(), nil
 }
 
 func (r *GitRepo) Init(rT RepoType) error {
@@ -68,17 +77,13 @@ func (r *GitRepo) Init(rT RepoType) error {
 		return fmt.Errorf("couldn't stat the directory %w", err)
 	}
 
-	cmd := r.command(args[:]...)
-	output, err := cmd.CombinedOutput()
-	fmt.Println("OUTPUT", string(output), cmd, err)
+	output, err := r.command(args[:]...)
+	fmt.Println("OUTPUT", output, err)
 	return err
 }
 
 func (r *GitRepo) Type() (RepoType, error) {
-	cmd := r.command("rev-parse", "--is-bare-repository")
-
-	//TODO Caputre stderr&stdout for error reporting
-	output, err := cmd.Output()
+	output, err := r.command("rev-parse", "--is-bare-repository")
 	if err != nil {
 		return Working, fmt.Errorf("couldn't execute git rev parse, output: %s, error: %w", output, err)
 	}
@@ -91,18 +96,16 @@ func (r *GitRepo) Type() (RepoType, error) {
 }
 
 func (r *GitRepo) SetOrigin(url string) error {
-	cmd := r.command("remote", "add", "origin", url)
-	o, err := cmd.CombinedOutput()
+	_, err := r.command("remote", "add", "origin", url)
 	if err != nil {
-		return fmt.Errorf("couldn't get the remote for origin =%s= %w", o, err)
+		return fmt.Errorf("couldn't get the remote for origin %w", err)
 	}
 
 	return nil
 }
 
 func (r *GitRepo) Origin() (string, error) {
-	cmd := r.command("remote", "get-url", "origin")
-	output, err := cmd.Output()
+	output, err := r.command("remote", "get-url", "origin")
 	if err != nil {
 		return "", fmt.Errorf("couldn't get the remote for origin %w", err)
 	}
@@ -111,21 +114,19 @@ func (r *GitRepo) Origin() (string, error) {
 }
 
 func (r *GitRepo) Commit(commit *Commit) error {
-	cmd := r.command(append([]string{"add"}, commit.Files...)...)
-	output, err := cmd.Output()
+	output, err := r.command(append([]string{"add"}, commit.Files...)...)
 	if err != nil {
 		return fmt.Errorf("couldn't add files %s, %w", output, err)
 	}
 
-	cmd = r.command(
+	_, err = r.command(
 		"commit",
 		"-m", commit.Message,
 		fmt.Sprintf("--author=%s", commit.Author),
 		fmt.Sprintf("--date=%s", commit.Date.Format("2006-01-02T15:04:05-07:00")),
 	)
-	output, err = cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("couldn't create a commit %s, %w", output, err)
+		return fmt.Errorf("couldn't create a commit %w", err)
 	}
 
 	return nil
