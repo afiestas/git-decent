@@ -64,7 +64,7 @@ func (rb *RepositoryBuilder) Build() (*GitRepo, error) {
 		rb.dir = dir
 	}
 
-	repo, err := NewGitRepo(rb.dir)
+	repo, err := NewGitRepoWithoutGlobalConfig(rb.dir)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't get the GitRpeo %w", err)
 	}
@@ -76,6 +76,15 @@ func (rb *RepositoryBuilder) Build() (*GitRepo, error) {
 	err = repo.Init(rb.repoType)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't init the GitRpeo %w", err)
+	}
+
+	err = repo.SetConfig("user.email", "test@gitdecent.io")
+	if err != nil {
+		return nil, fmt.Errorf("couldn't set user.email %w", err)
+	}
+	err = repo.SetConfig("user.name", "Git Decent Test")
+	if err != nil {
+		return nil, fmt.Errorf("couldn't set user.name %w", err)
 	}
 
 	if rb.origin != "" {

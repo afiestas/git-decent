@@ -21,7 +21,8 @@ const (
 )
 
 type GitRepo struct {
-	Dir string
+	Dir       string
+	configDir string
 }
 
 type Commit struct {
@@ -31,7 +32,20 @@ type Commit struct {
 	Files   []string
 }
 
-func NewGitRepo(dir string) (*GitRepo, error) {
+func NewGitRepoWithoutGlobalConfig(dir string) (*GitRepo, error) {
+	repo, err := newGitRepo(dir)
+	if err != nil {
+		return nil, err
+	}
+	repo.configDir = filepath.Join(repo.Dir, ".globalconfig")
+	return repo, err
+}
+
+func NewGitRepo(dir string, noGlobalConfig bool) (*GitRepo, error) {
+	return newGitRepo(dir)
+}
+
+func newGitRepo(dir string) (*GitRepo, error) {
 	if i, err := os.Stat(dir); err != nil {
 		return nil, fmt.Errorf("couldn't stat directory %w", err)
 	} else if !i.IsDir() {
@@ -44,9 +58,11 @@ func NewGitRepo(dir string) (*GitRepo, error) {
 }
 
 func (r *GitRepo) command(arg ...string) (string, error) {
-	fmt.Println(arg)
 	cmd := exec.Command(g, arg...)
 	cmd.Dir = r.Dir
+	if r.configDir != "" {
+		cmd.Env = append(cmd.Env, "GIT_CONFIG_GLOBAL="+r.configDir)
+	}
 	var stdoutBuf, stderrBuf bytes.Buffer
 	cmd.Stdout = &stdoutBuf
 	cmd.Stderr = &stderrBuf
@@ -77,8 +93,7 @@ func (r *GitRepo) Init(rT RepoType) error {
 		return fmt.Errorf("couldn't stat the directory %w", err)
 	}
 
-	output, err := r.command(args[:]...)
-	fmt.Println("OUTPUT", output, err)
+	_, err = r.command(args[:]...)
 	return err
 }
 
@@ -130,4 +145,9 @@ func (r *GitRepo) Commit(commit *Commit) error {
 	}
 
 	return nil
+}
+
+func (r *GitRepo) SetConfig(key string, value string) error {
+	_, err := r.command("config", "--local", key, value)
+	return err
 }
