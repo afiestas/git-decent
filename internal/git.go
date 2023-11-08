@@ -26,6 +26,7 @@ type GitRepo struct {
 }
 
 type Commit struct {
+	Hash    string
 	Message string
 	Date    time.Time
 	Author  string
@@ -150,4 +151,49 @@ func (r *GitRepo) Commit(commit *Commit) error {
 func (r *GitRepo) SetConfig(key string, value string) error {
 	_, err := r.command("config", "--local", key, value)
 	return err
+}
+
+func (r *GitRepo) Log() ([]Commit, error) {
+	commits := []Commit{}
+	params := []string{"log", "--pretty=format:%H%x1f%an%x1f%ai%x1f%s%x1f", "--name-only"}
+	output, err := r.command(params...)
+	if err != nil {
+		return commits, fmt.Errorf("couldn't execute git log %w", err)
+	}
+
+	rawCommits := strings.Split(output, "\n\n")
+	for _, rawCommit := range rawCommits {
+		parts := strings.Split(rawCommit, "\x1f")
+		if len(parts) < 4 {
+			fmt.Println("[WARN]: Couldn't parse commit from log")
+			continue
+		}
+		commit := Commit{
+			Hash:    parts[0],
+			Author:  parts[1],
+			Message: parts[3],
+		}
+
+		dateStr := parts[2]
+		files := parts[4]
+
+		date, err := time.Parse("2006-01-02 15:04:05 -0700", dateStr)
+		if err != nil {
+			fmt.Println("[WARN]: couldn't parse date from commit log")
+		}
+
+		commit.Date = date
+
+		pFiles := strings.Split(files, "\n")
+		for _, pFile := range pFiles {
+			if pFile != "" {
+				commit.Files = append(commit.Files, pFile)
+			}
+		}
+		// fmt.Printf("%#v \n", commit)
+
+		commits = append(commits, commit)
+	}
+
+	return commits, nil
 }

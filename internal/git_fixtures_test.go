@@ -14,7 +14,7 @@ type RepositoryBuilder struct {
 	origin        string
 	initialize    bool
 	commits       []Commit
-	randomCommits []Commit
+	randomCommits int
 }
 
 func NewRepositoryBuilder(t *testing.T) *RepositoryBuilder {
@@ -50,8 +50,8 @@ func (rb *RepositoryBuilder) AddCommit(commit *Commit) *RepositoryBuilder {
 	return rb
 }
 
-func (rb *RepositoryBuilder) AddRandomCommit() *RepositoryBuilder {
-	rb.randomCommits = append(rb.randomCommits, Commit{})
+func (rb *RepositoryBuilder) WithRandomCommits(number int) *RepositoryBuilder {
+	rb.randomCommits = number
 	return rb
 }
 
@@ -94,6 +94,14 @@ func (rb *RepositoryBuilder) Build() (*GitRepo, error) {
 		}
 	}
 
+	for x := 0; x < rb.randomCommits; x++ {
+		newCommit, err := newFixtureCommit(repo)
+		if err != nil {
+			return nil, fmt.Errorf("couldn't create random commit %w", err)
+		}
+		rb.commits = append(rb.commits, *newCommit)
+	}
+
 	for _, commit := range rb.commits {
 		for _, file := range commit.Files {
 			_, err := os.Stat(filepath.Join(rb.dir, file))
@@ -112,16 +120,17 @@ func (rb *RepositoryBuilder) Build() (*GitRepo, error) {
 
 func createFileInRepo(baseDir string) (string, error) {
 	i := 0
-	prefix := "fixture_"
+	prefix := "fixture"
 	fname := ""
 	createFile := ""
 	for {
+		i += 1
 		fname = fmt.Sprintf("%s_%d", prefix, i)
 		createFile = filepath.Join(baseDir, fname)
 		_, err := os.Stat(createFile)
 		if err == nil {
 			continue //File already exists
-		} else if err != os.ErrNotExist {
+		} else if !os.IsNotExist(err) {
 			return "", fmt.Errorf("couldn't stat fixture file %w", err)
 		}
 
@@ -136,15 +145,18 @@ func createFileInRepo(baseDir string) (string, error) {
 }
 
 func newFixtureCommit(repo *GitRepo) (*Commit, error) {
-
 	fname, err := createFileInRepo(repo.Dir)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create fixture file %w", err)
 	}
+	fname2, err := createFileInRepo(repo.Dir)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create fixture file %w", err)
+	}
 	return &Commit{
-		Message: fmt.Sprintf("Some commit message for %s", fname),
+		Message: fmt.Sprintf("Some commit message for %s and %s", fname, fname2),
 		Date:    time.Date(2000, 12, 20, 1, 2, 3, 4, time.UTC),
-		Author:  "Git test test@git-decent.git",
-		Files:   []string{"fname"},
+		Author:  "Git test <test@git-decent.git>",
+		Files:   []string{fname, fname2},
 	}, nil
 }

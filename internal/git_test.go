@@ -92,4 +92,15 @@ func TestFixtures(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, repo)
 	})
+
+	t.Run("Log with random commit", func(t *testing.T) {
+		repo, err := NewRepositoryBuilder(t).As(Working).WithRandomCommits(20).Build()
+		require.NoError(t, err)
+		require.NotNil(t, repo)
+
+		commits, err := repo.Log()
+		assert.NoError(t, err, "git log should not fail")
+		assert.Len(t, commits, 20, "all 20 commits should be returned")
+		assert.Len(t, commits[0].Files, 2)
+	})
 }
