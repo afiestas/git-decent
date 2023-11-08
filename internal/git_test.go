@@ -2,6 +2,8 @@
 package internal
 
 import (
+	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -11,14 +13,28 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var dFlag = flag.Bool("debug", false, "enable debug mode")
+
+func debug(args ...string) {
+	if !*dFlag {
+		return
+	}
+
+	fmt.Println("[DEBUG]", args)
+}
 func createTempDir(t *testing.T, pattern string) string {
 	dir, err := os.MkdirTemp("", pattern)
 	if err != nil {
 		require.NoError(t, err, "failed creatign temp directory")
 	}
 
+	debug("New temp dir", dir)
 	t.Cleanup(func() {
-		os.RemoveAll(dir)
+		if !*dFlag {
+			os.RemoveAll(dir)
+		} else {
+			debug("did not clena repo for debugging", dir)
+		}
 	})
 	return dir
 }

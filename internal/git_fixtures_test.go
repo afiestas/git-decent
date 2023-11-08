@@ -21,7 +21,7 @@ func NewRepositoryBuilder(t *testing.T) *RepositoryBuilder {
 	rb := &RepositoryBuilder{initialize: true}
 	if t != nil {
 		t.Cleanup(func() {
-			if rb.dir != "" {
+			if rb.dir != "" && !*dFlag {
 				os.RemoveAll(rb.dir)
 			}
 		})
@@ -64,6 +64,7 @@ func (rb *RepositoryBuilder) Build() (*GitRepo, error) {
 		rb.dir = dir
 	}
 
+	debug("Initializing repo at", rb.dir)
 	repo, err := NewGitRepoWithoutGlobalConfig(rb.dir)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't get the GitRpeo %w", err)
