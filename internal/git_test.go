@@ -80,10 +80,7 @@ func TestFixtures(t *testing.T) {
 		assert.ErrorIs(t, err, os.ErrNotExist)
 	})
 	t.Run("With commit", func(t *testing.T) {
-		dir, err := os.MkdirTemp("", "git-decent-test-with-dir")
-		// os.RemoveAll(dir)
-		assert.NoError(t, err, "mkdirtemp should give us a directory without error")
-
+		dir := createTempDir(t, "git-decent-test-with-dir")
 		os.WriteFile(filepath.Join(dir, "fixture"), []byte("test fixture"), 0666)
 		c := Commit{
 			Message: "Some commit message",
