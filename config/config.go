@@ -45,11 +45,11 @@ func GetGitRawConfig(c *config.Config) (RawScheduleConfig, error) {
 		return rawC, fmt.Errorf("can't find %s section in git config", section)
 	}
 
-	if len(c.Raw.Section("decent").Options) == 0 {
+	if len(c.Raw.Section(section).Options) == 0 {
 		return rawC, fmt.Errorf("section %s is empty, no schedule found", section)
 	}
 
-	o := c.Raw.Section("decent").Options
+	o := c.Raw.Section(section).Options
 	for _, day := range o {
 		rawC.SetValue(day.Key, day.Value)
 	}
