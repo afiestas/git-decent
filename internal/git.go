@@ -64,6 +64,7 @@ func (r *GitRepo) command(arg ...string) (string, error) {
 	if r.configDir != "" {
 		cmd.Env = append(cmd.Env, "GIT_CONFIG_GLOBAL="+r.configDir)
 	}
+
 	var stdoutBuf, stderrBuf bytes.Buffer
 	cmd.Stdout = &stdoutBuf
 	cmd.Stderr = &stderrBuf
@@ -78,7 +79,7 @@ func (r *GitRepo) command(arg ...string) (string, error) {
 func (r *GitRepo) Init(rT RepoType) error {
 
 	checkFile := ".git/config"
-	args := make([]string, 0, 2)
+	args := make([]string, 0, 3)
 	args = append(args, "init")
 
 	if rT == Bare {
@@ -94,6 +95,7 @@ func (r *GitRepo) Init(rT RepoType) error {
 		return fmt.Errorf("couldn't stat the directory %w", err)
 	}
 
+	args = append(args, "--initial-branch=main")
 	_, err = r.command(args[:]...)
 	return err
 }
