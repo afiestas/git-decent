@@ -155,6 +155,11 @@ func (r *GitRepo) SetConfig(key string, value string) error {
 	return err
 }
 
+func (r *GitRepo) Push() error {
+	_, err := r.command("push", "--all")
+	return err
+}
+
 func (r *GitRepo) Log() ([]Commit, error) {
 	commits := []Commit{}
 	params := []string{"log", "--pretty=format:%H%x1f%an%x1f%ai%x1f%s%x1f", "--name-only"}

@@ -120,3 +120,20 @@ func TestFixtures(t *testing.T) {
 		assert.Len(t, commits[0].Files, 2)
 	})
 }
+
+func TestPushToOrigin(t *testing.T) {
+	const amountCommits = 10
+
+	bare, err := NewRepositoryBuilder(t).As(Bare).Build()
+	require.NoError(t, err)
+	commits, err := bare.Log()
+	require.Empty(t, commits)
+
+	repo, err := NewRepositoryBuilder(t).As(Working).WithRandomCommits(amountCommits).WithOrigin(bare.Dir).Build()
+
+	err = repo.Push()
+	require.NoError(t, err)
+	commits, err = bare.Log()
+	require.NoError(t, err)
+	assert.Len(t, commits, amountCommits)
+}
