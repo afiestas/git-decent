@@ -92,6 +92,18 @@ func TestFixtures(t *testing.T) {
 		require.NoError(t, err)
 	})
 
+	t.Run("Clone + Push + Check upstream", func(t *testing.T) {
+		bare, err := NewRepositoryBuilder(t).As(Bare).Build()
+		require.NoError(t, err)
+		repo, err := NewRepositoryBuilder(t).Clone(bare.Dir).WithRandomCommits(10).Build()
+		require.NoError(t, err)
+
+		err = repo.Push()
+		require.NoError(t, err)
+
+		assert.Equal(t, "origin/main", repo.BranchUpstream("main"))
+	})
+
 	t.Run("With commit file not exists", func(t *testing.T) {
 		c := Commit{
 			Message: "Some commit message",

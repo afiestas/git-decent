@@ -131,6 +131,16 @@ func (r *GitRepo) Origin() (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
+func (r *GitRepo) BranchUpstream(branch string) string {
+	out, err := r.command("rev-parse", "--abbrev-ref", fmt.Sprintf("%s@{u}", branch))
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	fmt.Println(out)
+	return strings.TrimSpace(out)
+}
+
 func (r *GitRepo) Clone(remote string) error {
 	_, err := r.command("clone", remote, ".")
 	return err
