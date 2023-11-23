@@ -137,7 +137,6 @@ func (r *GitRepo) BranchUpstream(branch string) string {
 		fmt.Println(err)
 		return ""
 	}
-	fmt.Println(out)
 	return strings.TrimSpace(out)
 }
 
@@ -175,14 +174,27 @@ func (r *GitRepo) Push() error {
 	return err
 }
 
+func (r *GitRepo) LogWithRevision(revisionRange string) ([]Commit, error) {
+	return r.log(revisionRange)
+}
+
 func (r *GitRepo) Log() ([]Commit, error) {
-	commits := []Commit{}
+	return r.log()
+}
+
+func (r *GitRepo) log(args ...string) ([]Commit, error) {
 	params := []string{"log", "--pretty=format:%H%x1f%an%x1f%ai%x1f%s%x1f", "--name-only"}
+	params = append(params, args...)
 	output, err := r.command(params...)
 	if err != nil {
-		return commits, fmt.Errorf("couldn't execute git log %w", err)
+		return make([]Commit, 0), fmt.Errorf("couldn't execute git log %w", err)
 	}
 
+	return parseLog(output)
+}
+
+func parseLog(output string) ([]Commit, error) {
+	commits := []Commit{}
 	rawCommits := strings.Split(output, "\n\n")
 	for _, rawCommit := range rawCommits {
 		parts := strings.Split(rawCommit, "\x1f")

@@ -140,6 +140,26 @@ func TestFixtures(t *testing.T) {
 	})
 }
 
+func TestLogWithRevisionFromUpstream(t *testing.T) {
+	bare, err := NewRepositoryBuilder(t).As(Bare).Build()
+	require.NoError(t, err)
+	repo, err := NewRepositoryBuilder(t).Clone(bare.Dir).WithRandomCommits(10).Build()
+	require.NoError(t, err)
+
+	err = repo.Push()
+	require.NoError(t, err)
+
+	c, err := NewFixtureCommit(repo)
+	require.NoError(t, err)
+	err = repo.Commit(c)
+	require.NoError(t, err)
+
+	aLog := fmt.Sprintf("%s...", repo.BranchUpstream("main"))
+	cs, err := repo.LogWithRevision(aLog)
+	assert.Len(t, cs, 1)
+	assert.Equal(t, cs[0].Message, c.Message)
+}
+
 func TestPushToOrigin(t *testing.T) {
 	const amountCommits = 10
 

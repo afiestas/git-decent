@@ -111,7 +111,7 @@ func (rb *RepositoryBuilder) Build() (*GitRepo, error) {
 	}
 
 	for x := 0; x < rb.randomCommits; x++ {
-		newCommit, err := newFixtureCommit(repo)
+		newCommit, err := NewFixtureCommit(repo)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't create random commit %w", err)
 		}
@@ -160,7 +160,7 @@ func createFileInRepo(baseDir string) (string, error) {
 	}
 }
 
-func newFixtureCommit(repo *GitRepo) (*Commit, error) {
+func NewFixtureCommit(repo *GitRepo) (*Commit, error) {
 	fname, err := createFileInRepo(repo.Dir)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create fixture file %w", err)
