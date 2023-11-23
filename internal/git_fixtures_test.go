@@ -13,6 +13,7 @@ type RepositoryBuilder struct {
 	dir           string
 	origin        string
 	initialize    bool
+	clone         bool
 	commits       []Commit
 	randomCommits int
 }
@@ -45,6 +46,12 @@ func (rb *RepositoryBuilder) WithOrigin(remote string) *RepositoryBuilder {
 	return rb
 }
 
+func (rb *RepositoryBuilder) Clone(origin string) *RepositoryBuilder {
+	rb.clone = true
+	rb.origin = origin
+	return rb
+}
+
 func (rb *RepositoryBuilder) AddCommit(commit *Commit) *RepositoryBuilder {
 	rb.commits = append(rb.commits, *commit)
 	return rb
@@ -64,7 +71,6 @@ func (rb *RepositoryBuilder) Build() (*GitRepo, error) {
 		rb.dir = dir
 	}
 
-	debug("Initializing repo at", rb.dir)
 	repo, err := NewGitRepoWithoutGlobalConfig(rb.dir)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't get the GitRpeo %w", err)
@@ -74,9 +80,18 @@ func (rb *RepositoryBuilder) Build() (*GitRepo, error) {
 		return repo, nil
 	}
 
-	err = repo.Init(rb.repoType)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't init the GitRpeo %w", err)
+	if rb.clone {
+		debug("Cloning repo at", rb.dir)
+		err := repo.Clone(rb.origin)
+		if err != nil {
+			return nil, fmt.Errorf("couldn't clone from repo %w", err)
+		}
+	} else {
+		debug("Initializing repo at", rb.dir)
+		err = repo.Init(rb.repoType)
+		if err != nil {
+			return nil, fmt.Errorf("couldn't init the GitRpeo %w", err)
+		}
 	}
 
 	err = repo.SetConfig("user.email", "test@gitdecent.io")
@@ -88,7 +103,7 @@ func (rb *RepositoryBuilder) Build() (*GitRepo, error) {
 		return nil, fmt.Errorf("couldn't set user.name %w", err)
 	}
 
-	if rb.origin != "" {
+	if rb.origin != "" && rb.clone == false {
 		err = repo.SetOrigin(rb.origin)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't set origin in repo %w", err)

@@ -131,6 +131,11 @@ func (r *GitRepo) Origin() (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
+func (r *GitRepo) Clone(remote string) error {
+	_, err := r.command("clone", remote, ".")
+	return err
+}
+
 func (r *GitRepo) Commit(commit *Commit) error {
 	output, err := r.command(append([]string{"add"}, commit.Files...)...)
 	if err != nil {
@@ -204,3 +209,7 @@ func (r *GitRepo) Log() ([]Commit, error) {
 
 	return commits, nil
 }
+
+//Check if tracking remote, if so compare to it
+//Otherwise, assume it is a local branch and log from it
+//the configure base

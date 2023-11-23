@@ -85,6 +85,13 @@ func TestFixtures(t *testing.T) {
 		assert.Equal(t, "/foo/bar", o)
 	})
 
+	t.Run("Clone", func(t *testing.T) {
+		bare, err := NewRepositoryBuilder(t).As(Bare).Build()
+		require.NoError(t, err)
+		_, err = NewRepositoryBuilder(t).Clone(bare.Dir).Build()
+		require.NoError(t, err)
+	})
+
 	t.Run("With commit file not exists", func(t *testing.T) {
 		c := Commit{
 			Message: "Some commit message",
