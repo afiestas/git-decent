@@ -224,14 +224,9 @@ func parseLog(output string) ([]Commit, error) {
 				commit.Files = append(commit.Files, pFile)
 			}
 		}
-		// fmt.Printf("%#v \n", commit)
 
 		commits = append(commits, commit)
 	}
 
 	return commits, nil
 }
-
-//Check if tracking remote, if so compare to it
-//Otherwise, assume it is a local branch and log from it
-//the configure base
