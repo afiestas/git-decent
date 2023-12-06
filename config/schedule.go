@@ -8,9 +8,20 @@ import (
 	"time"
 )
 
+type TimeFrame struct {
+	StartMinute int
+	EndMinute   int
+	nextFrame   *TimeFrame
+}
+
 // A list of day minutes that are work times
+type DayMinutes [1440]*TimeFrame
+type Day struct {
+	Minutes      DayMinutes
+	DecentFrames []*TimeFrame
+}
 type Schedule struct {
-	Days [7][1440]bool
+	Days [7]Day
 }
 
 type ParseDayError struct {
@@ -24,6 +35,7 @@ func NewScheduleFromRaw(config *RawScheduleConfig) (Schedule, error) {
 	s := Schedule{}
 	for d := time.Sunday; d <= time.Saturday; d++ {
 		v, exists := config.Days[d]
+
 		if !exists {
 			continue
 		}
@@ -69,9 +81,16 @@ func NewScheduleFromRaw(config *RawScheduleConfig) (Schedule, error) {
 			sMinute := sTime.Hour()*60 + sTime.Minute()
 			eMinute := eTime.Hour()*60 + eTime.Minute()
 
-			for m := sMinute; m <= eMinute; m++ {
-				s.Days[d][m] = true
+			timeFrame := TimeFrame{StartMinute: sMinute, EndMinute: eMinute}
+			if l := len(s.Days[d].DecentFrames); l > 0 {
+				s.Days[d].DecentFrames[l-1].nextFrame = &timeFrame
 			}
+			s.Days[d].DecentFrames = append(s.Days[d].DecentFrames, &timeFrame)
+
+			for m := sMinute; m <= eMinute; m++ {
+				s.Days[d].Minutes[m] = &timeFrame
+			}
+
 		}
 	}
 
@@ -79,4 +98,12 @@ func NewScheduleFromRaw(config *RawScheduleConfig) (Schedule, error) {
 		return s, errors.Join(errs...)
 	}
 	return s, nil
+}
+
+func (s *Schedule) HasDecentTimeframe(day time.Weekday) bool {
+	return false
+}
+
+func (s *Schedule) DecentTimeFrames(day time.Weekday) []*TimeFrame {
+	return s.Days[day].DecentFrames
 }
