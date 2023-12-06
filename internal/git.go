@@ -142,7 +142,6 @@ func (r *GitRepo) CurrentBranch() string {
 func (r *GitRepo) BranchUpstream(branch string) string {
 	out, err := r.command("rev-parse", "--abbrev-ref", fmt.Sprintf("%s@{u}", branch))
 	if err != nil {
-		fmt.Println(err)
 		return ""
 	}
 	return strings.TrimSpace(out)
