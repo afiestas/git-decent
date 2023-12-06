@@ -98,9 +98,12 @@ func TestFixtures(t *testing.T) {
 		repo, err := NewRepositoryBuilder(t).Clone(bare.Dir).WithRandomCommits(10).Build()
 		require.NoError(t, err)
 
+		assert.Equal(t, "", repo.BranchUpstream("main"))
+
 		err = repo.Push()
 		require.NoError(t, err)
 
+		require.Equal(t, "main", repo.CurrentBranch())
 		assert.Equal(t, "origin/main", repo.BranchUpstream("main"))
 	})
 

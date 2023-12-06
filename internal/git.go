@@ -131,6 +131,14 @@ func (r *GitRepo) Origin() (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
+func (r *GitRepo) CurrentBranch() string {
+	output, err := r.command("rev-parse", "--abbrev-ref", "HEAD")
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(output))
+}
+
 func (r *GitRepo) BranchUpstream(branch string) string {
 	out, err := r.command("rev-parse", "--abbrev-ref", fmt.Sprintf("%s@{u}", branch))
 	if err != nil {
