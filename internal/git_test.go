@@ -143,6 +143,31 @@ func TestFixtures(t *testing.T) {
 	})
 }
 
+func TestConfig(t *testing.T) {
+	r, err := NewRepositoryBuilder(t).As(Working).Build()
+	require.NoError(t, err)
+
+	input := []byte(`[decent]
+		Monday = 09:00/17:00, 18:00/19:00
+		Tuesday = 10:00/11:00
+	`)
+	cFile := filepath.Join(r.Dir, ".git/config")
+	f, err := os.OpenFile(cFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	require.NoError(t, err)
+
+	f.Write(input)
+	f.Close()
+
+	options, err := r.GetSectionOptions("not-existing")
+	assert.Error(t, err)
+	assert.Empty(t, options)
+	options, err = r.GetSectionOptions("decent")
+	assert.Len(t, options, 2)
+
+	assert.Equal(t, "09:00/17:00, 18:00/19:00", options["monday"])
+	assert.Equal(t, "10:00/11:00", options["tuesday"])
+}
+
 func TestLogWithRevisionFromUpstream(t *testing.T) {
 	bare, err := NewRepositoryBuilder(t).As(Bare).Build()
 	require.NoError(t, err)

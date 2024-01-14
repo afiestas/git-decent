@@ -4,8 +4,6 @@ package config
 import (
 	"fmt"
 	"time"
-
-	"github.com/go-git/go-git/v5/config"
 )
 
 const section = "decent"
@@ -16,19 +14,19 @@ type RawScheduleConfig struct {
 
 func (config *RawScheduleConfig) SetValue(day string, value string) error {
 	switch day {
-	case "Monday":
+	case "monday":
 		config.Days[time.Monday] = value
-	case "Tuesday":
+	case "tuesday":
 		config.Days[time.Tuesday] = value
-	case "Wednesday":
+	case "wednesday":
 		config.Days[time.Wednesday] = value
-	case "Thursday":
+	case "thursday":
 		config.Days[time.Thursday] = value
-	case "Friday":
+	case "friday":
 		config.Days[time.Friday] = value
-	case "Saturday":
+	case "saturday":
 		config.Days[time.Saturday] = value
-	case "Sunday":
+	case "sunday":
 		config.Days[time.Sunday] = value
 	default:
 		return fmt.Errorf("invalid day configured, got %s with value %s", day, value)
@@ -36,22 +34,13 @@ func (config *RawScheduleConfig) SetValue(day string, value string) error {
 	return nil
 }
 
-func GetGitRawConfig(c *config.Config) (RawScheduleConfig, error) {
+func GetGitRawConfig(options *map[string]string) (RawScheduleConfig, error) {
 	rawC := RawScheduleConfig{
 		Days: make(map[time.Weekday]string),
 	}
 
-	if !c.Raw.HasSection(section) {
-		return rawC, fmt.Errorf("can't find %s section in git config", section)
-	}
-
-	if len(c.Raw.Section(section).Options) == 0 {
-		return rawC, fmt.Errorf("section %s is empty, no schedule found", section)
-	}
-
-	o := c.Raw.Section(section).Options
-	for _, day := range o {
-		rawC.SetValue(day.Key, day.Value)
+	for day, value := range *options {
+		rawC.SetValue(day, value)
 	}
 
 	return rawC, nil

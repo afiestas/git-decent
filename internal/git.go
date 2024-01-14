@@ -176,6 +176,29 @@ func (r *GitRepo) SetConfig(key string, value string) error {
 	return err
 }
 
+func (r *GitRepo) GetSectionOptions(name string) (map[string]string, error) {
+	ops := map[string]string{}
+	out, err := r.command("config", "--get-regexp", fmt.Sprintf("^%s.*", name))
+	if err != nil {
+		return ops, fmt.Errorf("git config failed, seciton does not exists? %w", err)
+	}
+
+	rOps := strings.Split(out, "\n")
+	for _, option := range rOps {
+		option = strings.TrimSpace(option)
+		parts := strings.SplitN(option, " ", 2)
+		if len(parts) != 2 {
+			return ops, errors.New(fmt.Sprintf("git config option with invalid value %s", option))
+		}
+
+		key := strings.Replace(parts[0], fmt.Sprintf("%s.", name), "", 1)
+		value := parts[1]
+		ops[key] = value
+	}
+
+	return ops, nil
+}
+
 func (r *GitRepo) Push() error {
 	_, err := r.command("push", "--all")
 	return err
