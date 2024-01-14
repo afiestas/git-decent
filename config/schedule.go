@@ -14,6 +14,10 @@ type TimeFrame struct {
 	nextFrame   *TimeFrame
 }
 
+func (t TimeFrame) String() string {
+	return fmt.Sprintf("%02d:%02d - %02d:%02d", t.StartMinute/60, t.StartMinute%60, t.EndMinute/60, t.EndMinute%60)
+}
+
 // A list of day minutes that are work times
 type DayMinutes [1440]*TimeFrame
 type Day struct {
@@ -106,4 +110,17 @@ func (s *Schedule) HasDecentTimeframe(day time.Weekday) bool {
 
 func (s *Schedule) DecentTimeFrames(day time.Weekday) []*TimeFrame {
 	return s.Days[day].DecentFrames
+}
+
+func (s Schedule) String() string {
+	ss := ""
+	for day, sch := range s.Days {
+		ss = fmt.Sprintf("%s%s has %d decent frames\n\t", ss, time.Weekday(day), len(sch.DecentFrames))
+		for _, timeFrame := range sch.DecentFrames {
+			ss = fmt.Sprintf("%s%s, ", ss, timeFrame)
+		}
+		ss = fmt.Sprintf("%s\n", ss)
+	}
+
+	return ss
 }
