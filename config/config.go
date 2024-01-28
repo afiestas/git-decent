@@ -45,8 +45,3 @@ func GetGitRawConfig(options *map[string]string) (RawScheduleConfig, error) {
 
 	return rawC, nil
 }
-
-func ParseRawConfig(rawC *RawScheduleConfig) error {
-
-	return nil
-}
