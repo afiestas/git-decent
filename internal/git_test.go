@@ -141,6 +141,21 @@ func TestFixtures(t *testing.T) {
 		assert.Len(t, commits, 20, "all 20 commits should be returned")
 		assert.Len(t, commits[0].Files, 2)
 	})
+
+	t.Run("Log with commits with date", func(t *testing.T) {
+		historyDates := []time.Time{
+			time.Date(2022, 1, 1, 1, 0, 0, 0, time.Now().Location()),
+			time.Date(2022, 1, 1, 2, 0, 0, 0, time.Now().Location()),
+		}
+		repo, err := NewRepositoryBuilder(t).As(Working).WithCommitsWithDates(historyDates).Build()
+		require.NoError(t, err)
+		log, err := repo.log()
+		assert.NoError(t, err)
+		assert.Len(t, log, 2)
+
+		assert.Equal(t, log[1].Date, historyDates[0])
+		assert.Equal(t, log[0].Date, historyDates[1])
+	})
 }
 
 func TestConfig(t *testing.T) {

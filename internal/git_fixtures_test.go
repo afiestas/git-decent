@@ -16,6 +16,7 @@ type RepositoryBuilder struct {
 	clone         bool
 	commits       []Commit
 	randomCommits int
+	commitsDates  []time.Time
 }
 
 func NewRepositoryBuilder(t *testing.T) *RepositoryBuilder {
@@ -59,6 +60,11 @@ func (rb *RepositoryBuilder) AddCommit(commit *Commit) *RepositoryBuilder {
 
 func (rb *RepositoryBuilder) WithRandomCommits(number int) *RepositoryBuilder {
 	rb.randomCommits = number
+	return rb
+}
+
+func (rb *RepositoryBuilder) WithCommitsWithDates(dates []time.Time) *RepositoryBuilder {
+	rb.commitsDates = dates
 	return rb
 }
 
@@ -115,6 +121,16 @@ func (rb *RepositoryBuilder) Build() (*GitRepo, error) {
 		if err != nil {
 			return nil, fmt.Errorf("couldn't create random commit %w", err)
 		}
+		rb.commits = append(rb.commits, *newCommit)
+	}
+
+	for _, date := range rb.commitsDates {
+		newCommit, err := NewFixtureCommit(repo)
+		if err != nil {
+			return nil, fmt.Errorf("couldn't create fixture commit")
+		}
+
+		newCommit.Date = date
 		rb.commits = append(rb.commits, *newCommit)
 	}
 
