@@ -24,6 +24,22 @@ type Day struct {
 	Minutes      DayMinutes
 	DecentFrames []*TimeFrame
 }
+
+func (d Day) String() string {
+	str := "Minutes With frame:"
+	for k, v := range d.Minutes {
+		if v != nil {
+			str = fmt.Sprintf("%s %d", str, k)
+		}
+	}
+	str = fmt.Sprintf("%s\nFrames", str)
+	for _, v := range d.DecentFrames {
+		str = fmt.Sprintf("%s\n\t%s", str, v)
+	}
+
+	return str
+}
+
 type Schedule struct {
 	Days [7]Day
 }
