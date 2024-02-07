@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestScheduleFromRawError(t *testing.T) {
@@ -58,4 +59,33 @@ func TestScheduleFromRaw(t *testing.T) {
 		assert.Equal(t, frames[0], s.Days[time.Monday].Minutes[sminute])
 		assert.Equal(t, frames[1], s.Days[time.Monday].Minutes[18*60])
 	})
+}
+
+func TestClosestDecentDay(t *testing.T) {
+	raw := RawScheduleConfig{
+		Days: map[time.Weekday]string{
+			//Space after , is part of the test to check that we are trimming
+			time.Monday:    "10:00/11:00",
+			time.Wednesday: "10:00/11:00",
+			time.Friday:    "10:00/11:00",
+		},
+	}
+
+	schedule, err := NewScheduleFromRaw(&raw)
+	require.NoError(t, err)
+
+	d := schedule.ClosestDecentDay(time.Monday)
+	assert.Equal(t, d, time.Monday)
+
+	d = schedule.ClosestDecentDay(time.Tuesday)
+	assert.Equal(t, d, time.Wednesday)
+
+	d = schedule.ClosestDecentDay(time.Wednesday)
+	assert.Equal(t, d, time.Wednesday)
+
+	d = schedule.ClosestDecentDay(time.Thursday)
+	assert.Equal(t, d, time.Friday)
+
+	d = schedule.ClosestDecentDay(time.Saturday)
+	assert.Equal(t, d, time.Monday)
 }

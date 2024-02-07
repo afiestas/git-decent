@@ -128,6 +128,20 @@ func (s *Schedule) DecentTimeFrames(day time.Weekday) []*TimeFrame {
 	return s.Days[day].DecentFrames
 }
 
+func (s *Schedule) ClosestDecentDay(day time.Weekday) time.Weekday {
+	if len(s.Days[day].DecentFrames) > 0 {
+		return day
+	}
+
+	for nextDay := (day + 1) % 7; nextDay != day; nextDay = (nextDay + 1) % 7 {
+		if len(s.Days[nextDay].DecentFrames) > 0 {
+			return nextDay
+		}
+	}
+
+	return day
+}
+
 func (s Schedule) String() string {
 	ss := ""
 	for day, sch := range s.Days {
