@@ -149,12 +149,12 @@ func TestFixtures(t *testing.T) {
 		}
 		repo, err := NewRepositoryBuilder(t).As(Working).WithCommitsWithDates(historyDates).Build()
 		require.NoError(t, err)
-		log, err := repo.log()
+		log, err := repo.Log()
 		assert.NoError(t, err)
 		assert.Len(t, log, 2)
 
-		assert.Equal(t, log[1].Date, historyDates[0])
-		assert.Equal(t, log[0].Date, historyDates[1])
+		assert.Equal(t, log[0].Date, historyDates[0])
+		assert.Equal(t, log[1].Date, historyDates[1])
 	})
 }
 
@@ -218,4 +218,28 @@ func TestPushToOrigin(t *testing.T) {
 	commits, err = bare.Log()
 	require.NoError(t, err)
 	assert.Len(t, commits, amountCommits)
+}
+
+func TestLogBeforeAndAfter(t *testing.T) {
+	dir := createTempDir(t, "git-decent-test-log")
+	os.WriteFile(filepath.Join(dir, "fixture"), []byte("test fixture"), 0666)
+	os.WriteFile(filepath.Join(dir, "fixture2"), []byte("test fixture2"), 0666)
+	c := Commit{
+		Message: "Some commit message",
+		Date:    time.Date(2000, 12, 20, 1, 2, 3, 4, time.UTC),
+		Author:  "Git test <withcommits@git-decent.git>",
+		Files:   []string{"fixture"},
+	}
+	c2 := c
+	c2.Date = time.Date(2000, 12, 21, 1, 2, 3, 4, time.UTC)
+	c2.Files = []string{"fixture2"}
+	repo, err := NewRepositoryBuilder(t).At(dir).AddCommit(&c).AddCommit(&c2).Build()
+	assert.NoError(t, err)
+	assert.NotNil(t, repo)
+
+	cs, err := repo.Log()
+	assert.NoError(t, err)
+	assert.NotEmpty(t, cs)
+	assert.Nil(t, cs[0].Prev)
+	assert.NotNil(t, cs[0].Next, "First commit should be linked to the second")
 }

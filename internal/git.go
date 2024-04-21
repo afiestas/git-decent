@@ -3,6 +3,7 @@ package internal
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -14,6 +15,7 @@ import (
 const g string = "git"
 
 type RepoType int
+type GitLog []*Commit
 
 const (
 	Working RepoType = iota
@@ -31,6 +33,8 @@ type Commit struct {
 	Date    time.Time
 	Author  string
 	Files   []string
+	Prev    *Commit
+	Next    *Commit
 }
 
 func NewGitRepoWithoutGlobalConfig(dir string) (*GitRepo, error) {
@@ -204,27 +208,29 @@ func (r *GitRepo) Push() error {
 	return err
 }
 
-func (r *GitRepo) LogWithRevision(revisionRange string) ([]Commit, error) {
+func (r *GitRepo) LogWithRevision(revisionRange string) (GitLog, error) {
 	return r.log(revisionRange)
 }
 
-func (r *GitRepo) Log() ([]Commit, error) {
+func (r *GitRepo) Log() (GitLog, error) {
 	return r.log()
 }
 
-func (r *GitRepo) log(args ...string) ([]Commit, error) {
-	params := []string{"log", "--pretty=format:%H%x1f%an%x1f%ai%x1f%s%x1f", "--name-only"}
+func (r *GitRepo) log(args ...string) (GitLog, error) {
+	params := []string{"log", "--pretty=format:%H%x1f%an%x1f%ai%x1f%s%x1f", "--name-only", "--reverse"}
 	params = append(params, args...)
 	output, err := r.command(params...)
 	if err != nil {
-		return make([]Commit, 0), fmt.Errorf("couldn't execute git log %w", err)
+		return make(GitLog, 0), fmt.Errorf("couldn't execute git log %w", err)
 	}
 
 	return parseLog(output)
 }
 
-func parseLog(output string) ([]Commit, error) {
-	commits := []Commit{}
+func parseLog(output string) (GitLog, error) {
+	commits := GitLog{}
+	var lastCommit *Commit
+
 	rawCommits := strings.Split(output, "\n\n")
 	for _, rawCommit := range rawCommits {
 		parts := strings.Split(rawCommit, "\x1f")
@@ -236,6 +242,7 @@ func parseLog(output string) ([]Commit, error) {
 			Hash:    parts[0],
 			Author:  parts[1],
 			Message: parts[3],
+			Prev:    lastCommit,
 		}
 
 		dateStr := parts[2]
@@ -255,7 +262,13 @@ func parseLog(output string) ([]Commit, error) {
 			}
 		}
 
-		commits = append(commits, commit)
+		if lastCommit != nil {
+			lastCommit.Next = &commit
+			commit.Prev = lastCommit
+		}
+
+		lastCommit = &commit
+		commits = append(commits, &commit)
 	}
 
 	return commits, nil
