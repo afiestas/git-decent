@@ -74,18 +74,23 @@ func TestClosestDecentDay(t *testing.T) {
 	schedule, err := NewScheduleFromRaw(&raw)
 	require.NoError(t, err)
 
-	d := schedule.ClosestDecentDay(time.Monday)
+	d, nDays := schedule.ClosestDecentDay(time.Monday)
 	assert.Equal(t, d, time.Monday)
+	assert.Equal(t, nDays, 0)
 
-	d = schedule.ClosestDecentDay(time.Tuesday)
+	d, nDays = schedule.ClosestDecentDay(time.Tuesday)
 	assert.Equal(t, d, time.Wednesday)
+	assert.Equal(t, nDays, 1)
 
-	d = schedule.ClosestDecentDay(time.Wednesday)
+	d, nDays = schedule.ClosestDecentDay(time.Wednesday)
 	assert.Equal(t, d, time.Wednesday)
+	assert.Equal(t, nDays, 0)
 
-	d = schedule.ClosestDecentDay(time.Thursday)
+	d, nDays = schedule.ClosestDecentDay(time.Thursday)
 	assert.Equal(t, d, time.Friday)
+	assert.Equal(t, nDays, 1)
 
-	d = schedule.ClosestDecentDay(time.Saturday)
+	d, nDays = schedule.ClosestDecentDay(time.Saturday)
 	assert.Equal(t, d, time.Monday)
+	assert.Equal(t, nDays, 2)
 }
