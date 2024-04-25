@@ -144,6 +144,28 @@ func (s *Schedule) ClosestDecentDay(day time.Weekday) (time.Weekday, int) {
 	return day, n
 }
 
+func (s *Schedule) ClosestDecentFrame(date time.Time) (time.Weekday, int, int) {
+	day := date.Weekday()
+	minute := DayMinute(date)
+	closestDay, passedDays := s.ClosestDecentDay(day)
+	fmt.Println("Closest day", day, closestDay, passedDays)
+	if passedDays == 0 {
+		fmt.Println("Passed day is 0, checking frames", date)
+		for k, frame := range s.Days[day].DecentFrames {
+			fmt.Println("\t", minute, frame.EndMinute)
+			if minute <= frame.EndMinute {
+				return day, k, 0
+			}
+		}
+
+		closestDay, passedDays = s.ClosestDecentDay(day + 1)
+		return closestDay, 0, passedDays + 1
+
+	}
+
+	return closestDay, 0, int(closestDay) - int(day)
+}
+
 func (s Schedule) String() string {
 	ss := ""
 	for day, sch := range s.Days {
