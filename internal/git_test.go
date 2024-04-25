@@ -42,7 +42,6 @@ func createTempDir(t *testing.T, pattern string) string {
 func TestFixtures(t *testing.T) {
 	t.Run("Without dir", func(t *testing.T) {
 		repo, err := NewRepositoryBuilder(t).Build()
-		defer os.RemoveAll(repo.Dir)
 
 		assert.NoError(t, err, "builder without step should always work")
 		assert.NotEmpty(t, repo.Dir, "a dir should be created since none is passed")
