@@ -22,9 +22,7 @@ func TestAmendSingleUndecentCommit(t *testing.T) {
 		parseDate("2024-01-28 18:30:00", t),
 	}
 
-	repo, err := NewRepositoryBuilder(t).As(Working).WithCommitsWithDates(historyDates).Build()
-	require.NoError(t, err)
-	require.NotNil(t, repo)
+	repo := NewRepositoryBuilder(t).As(Working).WithCommitsWithDates(historyDates).MustBuild()
 
 	log, err := repo.Log()
 	require.NoError(t, err)
@@ -54,9 +52,7 @@ func TestAmendTwoCloseUndecentCommits(t *testing.T) {
 		parseDate("2024-01-28 18:35:00", t),
 	}
 
-	repo, err := NewRepositoryBuilder(t).As(Working).WithCommitsWithDates(historyDates).Build()
-	require.NoError(t, err)
-	require.NotNil(t, repo)
+	repo := NewRepositoryBuilder(t).As(Working).WithCommitsWithDates(historyDates).MustBuild()
 
 	log, err := repo.Log()
 	require.NoError(t, err)
@@ -95,9 +91,7 @@ func TestAmendCompressionUndecentCommits(t *testing.T) {
 		parseDate("2024-01-28 23:59:00", t),
 	}
 
-	repo, err := NewRepositoryBuilder(t).As(Working).WithCommitsWithDates(historyDates).Build()
-	require.NoError(t, err)
-	require.NotNil(t, repo)
+	repo := NewRepositoryBuilder(t).As(Working).WithCommitsWithDates(historyDates).MustBuild()
 
 	log, err := repo.Log()
 	require.NoError(t, err)
@@ -137,9 +131,7 @@ func TestAmendCommitInAmendedRange(t *testing.T) {
 		parseDate("2024-01-29 09:00:00", t),
 	}
 
-	repo, err := NewRepositoryBuilder(t).As(Working).WithCommitsWithDates(historyDates).Build()
-	require.NoError(t, err)
-	require.NotNil(t, repo)
+	repo := NewRepositoryBuilder(t).As(Working).WithCommitsWithDates(historyDates).MustBuild()
 
 	log, err := repo.Log()
 	require.NoError(t, err)
@@ -189,9 +181,7 @@ func TestAmendOverflow(t *testing.T) {
 		parseDate("2024-01-29 20:51:00", t),
 	}
 
-	repo, err := NewRepositoryBuilder(t).As(Working).WithCommitsWithDates(historyDates).Build()
-	require.NoError(t, err)
-	require.NotNil(t, repo)
+	repo := NewRepositoryBuilder(t).As(Working).WithCommitsWithDates(historyDates).MustBuild()
 
 	log, err := repo.Log()
 	require.NoError(t, err)

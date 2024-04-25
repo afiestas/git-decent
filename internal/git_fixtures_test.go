@@ -17,10 +17,11 @@ type RepositoryBuilder struct {
 	commits       []Commit
 	randomCommits int
 	commitsDates  []time.Time
+	t             *testing.T
 }
 
 func NewRepositoryBuilder(t *testing.T) *RepositoryBuilder {
-	rb := &RepositoryBuilder{initialize: true}
+	rb := &RepositoryBuilder{initialize: true, t: t}
 	if t != nil {
 		t.Cleanup(func() {
 			if rb.dir != "" && !*dFlag {
@@ -148,6 +149,15 @@ func (rb *RepositoryBuilder) Build() (*GitRepo, error) {
 	}
 
 	return repo, nil
+}
+
+func (rb *RepositoryBuilder) MustBuild() *GitRepo {
+	repo, err := rb.Build()
+	if err != nil {
+		rb.t.Error(err)
+		return nil
+	}
+	return repo
 }
 
 func createFileInRepo(baseDir string) (string, error) {
