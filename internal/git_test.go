@@ -143,8 +143,8 @@ func TestFixtures(t *testing.T) {
 
 	t.Run("Log with commits with date", func(t *testing.T) {
 		historyDates := []time.Time{
-			time.Date(2022, 1, 1, 1, 0, 0, 0, time.Now().Location()),
-			time.Date(2022, 1, 1, 2, 0, 0, 0, time.Now().Location()),
+			time.Date(2022, 1, 1, 1, 0, 0, 0, time.Now().UTC().Location()),
+			time.Date(2022, 1, 1, 2, 0, 0, 0, time.Now().UTC().Location()),
 		}
 		repo, err := NewRepositoryBuilder(t).As(Working).WithCommitsWithDates(historyDates).Build()
 		require.NoError(t, err)

@@ -166,7 +166,7 @@ func (r *GitRepo) Commit(commit *Commit) error {
 		"commit",
 		"-m", commit.Message,
 		fmt.Sprintf("--author=%s", commit.Author),
-		fmt.Sprintf("--date=%s", commit.Date.Format("2006-01-02T15:04:05-07:00")),
+		fmt.Sprintf("--date=%s", commit.Date.Format("2006-01-02T15:04:05-0700")),
 	)
 	if err != nil {
 		return fmt.Errorf("couldn't create a commit %w", err)
@@ -253,7 +253,7 @@ func parseLog(output string) (GitLog, error) {
 			fmt.Println("[WARN]: couldn't parse date from commit log")
 		}
 
-		commit.Date = date
+		commit.Date = date.UTC()
 
 		pFiles := strings.Split(files, "\n")
 		for _, pFile := range pFiles {
