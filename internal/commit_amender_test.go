@@ -17,12 +17,16 @@ func sut(t *testing.T, fixtures amendFixture, decentFrames map[time.Weekday]stri
 	schedule, err := config.NewScheduleFromRaw(&config.RawScheduleConfig{Days: decentFrames})
 	require.NoError(t, err)
 
+	var lastDate *time.Time = nil
 	for k, commit := range log {
 		if commit.Prev != nil {
 			commit.Prev = log[k-1]
+			lastDate = &commit.Prev.Date
 		}
-		amended := Amend(*commit, log, schedule)
-		log[k] = &amended
+
+		amended := Amend(commit.Date, lastDate, schedule)
+		commit.Date = amended
+		log[k] = commit
 	}
 
 	assertAmendedLog(t, fixtures.amendedDates, log)
@@ -101,7 +105,7 @@ var tests = []struct {
 	{
 		name:    "Amend Commit In Amended Range",
 		initial: []string{"2024-01-28 18:30:00", "2024-01-28 23:59:00", "2024-01-29 09:00:00"},
-		amended: []string{"2024-01-29 09:00:00", "2024-01-29 09:09:00", "2024-01-29 09:10:00"},
+		amended: []string{"2024-01-29 09:00:00", "2024-01-29 09:09:00", "2024-01-29 09:14:00"},
 		decentSlots: map[time.Weekday]string{
 			time.Monday: "09:00/17:00",
 		},
@@ -109,7 +113,7 @@ var tests = []struct {
 	{
 		name:    "Amend Overflow",
 		initial: []string{"2024-01-29 17:00:00", "2024-01-29 16:55:00", "2024-01-29 17:50:00", "2024-01-29 20:51:00"},
-		amended: []string{"2024-01-29 17:00:00", "2024-01-29 17:05:00", "2024-01-29 18:00:00", "2024-01-30 09:00:00"},
+		amended: []string{"2024-01-29 17:00:00", "2024-01-29 18:05:00", "2024-01-29 18:10:00", "2024-01-30 09:01:00"},
 		decentSlots: map[time.Weekday]string{
 			time.Monday:  "09:00/17:00, 18:00/19:00",
 			time.Tuesday: "09:00/17:00",
