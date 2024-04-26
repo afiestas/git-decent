@@ -166,6 +166,30 @@ func (s *Schedule) ClosestDecentFrame(date time.Time) (time.Weekday, int, int) {
 	return closestDay, 0, int(closestDay) - int(day)
 }
 
+func (s *Schedule) ClosestDecentMinute(date time.Time) (int, int) {
+	wDay := date.Weekday()
+	dMin := DayMinute(date)
+	frame := s.Days[wDay].Minutes[dMin]
+	if frame != nil {
+		return dMin, 0
+	}
+
+	for _, frame := range s.Days[wDay].DecentFrames {
+		if dMin <= frame.EndMinute {
+			return frame.StartMinute, frame.StartMinute - dMin
+		}
+	}
+
+	day, nDay := s.ClosestDecentDay(date.Weekday() + 1)
+	nDay += 1
+	frame = s.Days[day].DecentFrames[0]
+	hoursToaDd := 24 - date.Hour()
+
+	hoursToaDd += (nDay - 1) * 24
+	return frame.StartMinute, hoursToaDd*60 + frame.StartMinute - date.Minute()
+
+}
+
 func (s Schedule) String() string {
 	ss := ""
 	for day, sch := range s.Days {

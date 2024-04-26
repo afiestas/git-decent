@@ -140,3 +140,45 @@ func TestClosestDecentFrame(t *testing.T) {
 	assert.Equal(t, 0, frame)
 	assert.Equal(t, 2, nDays)
 }
+
+func TestClosestDecentMinute(t *testing.T) {
+	raw := RawScheduleConfig{
+		Days: map[time.Weekday]string{
+			time.Monday:    "10:00/11:00, 13:00/14:00",
+			time.Wednesday: "10:00/11:00",
+			time.Friday:    "10:00/11:00",
+		},
+	}
+
+	schedule, err := NewScheduleFromRaw(&raw)
+	require.NoError(t, err)
+
+	layout := "2006-01-02 15:04:05"
+	pTime, err := time.Parse(layout, "2024-01-28 18:30:00")
+	assert.NoError(t, err)
+
+	minute, nMins := schedule.ClosestDecentMinute(pTime)
+	assert.Equal(t, 930, nMins)
+	assert.Equal(t, 10*60, minute)
+
+	pTime, err = time.Parse(layout, "2024-01-29 09:59:00")
+	assert.NoError(t, err)
+
+	minute, nMins = schedule.ClosestDecentMinute(pTime)
+	assert.Equal(t, 1, nMins)
+	assert.Equal(t, 10*60, minute)
+
+	pTime, err = time.Parse(layout, "2024-01-29 11:01:00")
+	assert.NoError(t, err)
+
+	minute, nMins = schedule.ClosestDecentMinute(pTime)
+	assert.Equal(t, 2*60-1, nMins)
+	assert.Equal(t, 13*60, minute)
+
+	pTime, err = time.Parse(layout, "2024-01-29 14:01:00")
+	assert.NoError(t, err)
+
+	minute, nMins = schedule.ClosestDecentMinute(pTime)
+	assert.Equal(t, 2639, nMins)
+	assert.Equal(t, 10*60, minute)
+}
