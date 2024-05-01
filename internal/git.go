@@ -62,9 +62,13 @@ func newGitRepo(dir string) (*GitRepo, error) {
 	}, nil
 }
 
-func (r *GitRepo) command(arg ...string) (string, error) {
+func (r *GitRepo) commandWithEnv(env []string, arg ...string) (string, error) {
+
 	cmd := exec.Command(g, arg...)
 	cmd.Dir = r.Dir
+
+	cmd.Env = append(cmd.Env, env...)
+
 	if r.configDir != "" {
 		cmd.Env = append(cmd.Env, "GIT_CONFIG_GLOBAL="+r.configDir)
 	}
@@ -78,6 +82,10 @@ func (r *GitRepo) command(arg ...string) (string, error) {
 		return "", fmt.Errorf("git command error %s %s %w", cmd.Stdout, cmd.Stderr, err)
 	}
 	return stdoutBuf.String(), nil
+}
+
+func (r *GitRepo) command(arg ...string) (string, error) {
+	return r.commandWithEnv([]string{}, arg...)
 }
 
 func (r *GitRepo) Init(rT RepoType) error {
@@ -206,6 +214,21 @@ func (r *GitRepo) GetSectionOptions(name string) (map[string]string, error) {
 func (r *GitRepo) Push() error {
 	_, err := r.command("push", "--all")
 	return err
+}
+
+func (r *GitRepo) RootCommitHash() (string, error) {
+	params := []string{"rev-list", "--max-parents=0", "HEAD"}
+	output, err := r.command(params...)
+	if err != nil {
+		return "", err
+	}
+	output = strings.TrimSpace(output)
+
+	return output, nil
+}
+
+func (r *GitRepo) AmendDates(log GitLog) error {
+	return nil
 }
 
 func (r *GitRepo) LogWithRevision(revisionRange string) (GitLog, error) {

@@ -242,3 +242,13 @@ func TestLogBeforeAndAfter(t *testing.T) {
 	assert.Nil(t, cs[0].Prev)
 	assert.NotNil(t, cs[0].Next, "First commit should be linked to the second")
 }
+
+func TestRootCommitHash(t *testing.T) {
+	repo := NewRepositoryBuilder(t).WithRandomCommits(2).MustBuild()
+	log, err := repo.Log()
+	assert.NoError(t, err)
+
+	rootHash, err := repo.RootCommitHash()
+	assert.NoError(t, err)
+	assert.Equal(t, log[0].Hash, rootHash)
+}
