@@ -252,3 +252,45 @@ func TestRootCommitHash(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, log[0].Hash, rootHash)
 }
+
+func TestAmendMultipleDatesWithRoot(t *testing.T) {
+	repo := NewRepositoryBuilder(t).WithRandomCommits(5).MustBuild()
+	log, err := repo.Log()
+	assert.NoError(t, err)
+	assert.NotEmpty(t, log)
+
+	for key := range log {
+		log[key].Date = time.Date(2022, 02, key+1, 0, 0, 0, 0, log[key].Date.Location())
+	}
+
+	err = repo.AmendDates(log)
+	assert.NoError(t, err, "Amend dates should not return an error")
+
+	amendedLog, _ := repo.Log()
+	assert.NotEmpty(t, log)
+
+	for key, commit := range amendedLog {
+		assert.Equal(t, time.Date(2022, 02, key+1, 0, 0, 0, 0, commit.Date.Location()), commit.Date)
+	}
+}
+
+func TestAmendMultipleDatesWithoutRoot(t *testing.T) {
+	repo := NewRepositoryBuilder(t).WithRandomCommits(5).MustBuild()
+	log, err := repo.LogWithRevision("-3")
+	assert.NoError(t, err)
+	assert.NotEmpty(t, log)
+
+	for key := range log {
+		log[key].Date = time.Date(2022, 02, key+1, 0, 0, 0, 0, log[key].Date.Location())
+	}
+
+	err = repo.AmendDates(log)
+	assert.NoError(t, err, "Amend dates should not return an error")
+
+	amendedLog, _ := repo.LogWithRevision("-3")
+	assert.NotEmpty(t, log)
+
+	for key, commit := range amendedLog {
+		assert.Equal(t, time.Date(2022, 02, key+1, 0, 0, 0, 0, commit.Date.Location()), commit.Date)
+	}
+}

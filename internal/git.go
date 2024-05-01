@@ -228,7 +228,48 @@ func (r *GitRepo) RootCommitHash() (string, error) {
 }
 
 func (r *GitRepo) AmendDates(log GitLog) error {
-	return nil
+	hash, err := r.RootCommitHash()
+	if err != nil {
+		return fmt.Errorf("failed to obtain the root commit hash: %w", err)
+	}
+
+	cmd := []string{"rebase", "--interactive"}
+	if hash == log[0].Hash {
+		cmd = append(cmd, "--root")
+	} else {
+		cmd = append(cmd, fmt.Sprintf("HEAD~%d", len(log)))
+	}
+
+	var builder strings.Builder
+	for _, commit := range log {
+		builder.WriteString(fmt.Sprintf(
+			"pick %s\nexec git commit --amend --no-edit --date=\"%s\"\n",
+			commit.Hash[:7],
+			commit.Date.Format("Mon, 02 Jan 2006 15:04:05 -0700"),
+		))
+	}
+
+	file, err := os.CreateTemp(os.TempDir(), "git-decent-amend")
+	if err != nil {
+		return fmt.Errorf("failed to create tmp file for rebase todo: %w", err)
+	}
+	defer os.Remove(file.Name())
+
+	_, err = file.WriteString(builder.String())
+
+	if err != nil {
+		file.Close()
+		return fmt.Errorf("failed to write the todo file: %w", err)
+	}
+
+	err = file.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close the root commit hash: %w", err)
+	}
+
+	editorCommand := fmt.Sprintf("GIT_SEQUENCE_EDITOR=cp %s", file.Name())
+	_, err = r.commandWithEnv([]string{editorCommand}, cmd...)
+	return err
 }
 
 func (r *GitRepo) LogWithRevision(revisionRange string) (GitLog, error) {
