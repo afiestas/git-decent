@@ -4,7 +4,7 @@ package config
 import (
 	"errors"
 	"fmt"
-	"strings"
+	"strconv"
 	"time"
 )
 
@@ -12,6 +12,11 @@ type TimeFrame struct {
 	StartMinute int
 	EndMinute   int
 	nextFrame   *TimeFrame
+}
+
+type HourMin struct {
+	hour   int
+	minute int
 }
 
 func (t TimeFrame) String() string {
@@ -55,15 +60,13 @@ func NewScheduleFromRaw(config *RawScheduleConfig) (Schedule, error) {
 	s := Schedule{}
 	for d := time.Sunday; d <= time.Saturday; d++ {
 		v, exists := config.Days[d]
-
 		if !exists {
 			continue
 		}
 
-		tRange := strings.Split(v, ",")
+		tRange := parseFrames(v)
 		for _, r := range tRange {
-			hMinutes := strings.Split(r, "/")
-			if len(hMinutes) < 2 {
+			if len(r) != 11 {
 				errs = append(
 					errs,
 					ParseDayError{
@@ -74,8 +77,8 @@ func NewScheduleFromRaw(config *RawScheduleConfig) (Schedule, error) {
 				continue
 			}
 
-			sMin := strings.TrimSpace(hMinutes[0])
-			sTime, err := time.Parse("15:04", sMin)
+			sMin := r[:5]
+			sTime, err := parseTime(sMin)
 			if err != nil {
 				errs = append(
 					errs,
@@ -84,8 +87,8 @@ func NewScheduleFromRaw(config *RawScheduleConfig) (Schedule, error) {
 				continue
 			}
 
-			eMin := strings.TrimSpace(hMinutes[1])
-			eTime, err := time.Parse("15:04", eMin)
+			eMin := r[6:]
+			eTime, err := parseTime(eMin)
 			if err != nil {
 				errs = append(
 					errs,
@@ -94,12 +97,12 @@ func NewScheduleFromRaw(config *RawScheduleConfig) (Schedule, error) {
 				continue
 			}
 
-			if sTime.After(eTime) {
+			sMinute := sTime.hour*60 + sTime.minute
+			eMinute := eTime.hour*60 + eTime.minute
+
+			if sMinute > eMinute {
 				errs = append(errs, fmt.Errorf("time range is inverse: %s is after %s", sMin, eMin))
 			}
-
-			sMinute := sTime.Hour()*60 + sTime.Minute()
-			eMinute := eTime.Hour()*60 + eTime.Minute()
 
 			timeFrame := TimeFrame{StartMinute: sMinute, EndMinute: eMinute}
 			if l := len(s.Days[d].DecentFrames); l > 0 {
@@ -118,6 +121,57 @@ func NewScheduleFromRaw(config *RawScheduleConfig) (Schedule, error) {
 		return s, errors.Join(errs...)
 	}
 	return s, nil
+}
+
+// "10:00/11:00, 13:00/14:00"
+func parseFrames(rawFrames string) []string {
+	var frames []string
+	s := 0
+	for c := 0; c < len(rawFrames); c++ {
+		if rawFrames[c] == ' ' {
+			s = c + 1
+			continue
+		}
+		if rawFrames[c] == ',' {
+			frames = append(frames, rawFrames[s:c])
+			s = c + 1
+		}
+	}
+
+	frames = append(frames, rawFrames[s:])
+	return frames
+}
+
+// 15:04
+func parseTime(time string) (HourMin, error) {
+	hourMin := HourMin{}
+
+	if len(time) > 5 || time[2] != ':' {
+		return hourMin, fmt.Errorf("incorrect time format, expected 15:04 but given %s", time)
+	}
+
+	hour, err := strconv.Atoi(time[:2])
+	if err != nil {
+		return hourMin, fmt.Errorf("couldn't parse hour: %s error: %w", time[:2], err)
+	}
+
+	min, err := strconv.Atoi(time[3:])
+	if err != nil {
+		return hourMin, fmt.Errorf("couldn't parse minutes: %s error: %w", time[:3], err)
+	}
+
+	if hour < 0 || hour > 23 {
+		return hourMin, fmt.Errorf("hour out of range, hour: %d", hour)
+	}
+
+	if min < 0 || min > 59 {
+		return hourMin, fmt.Errorf("time out of range, hour: minute: %d", min)
+	}
+
+	hourMin.hour = hour
+	hourMin.minute = min
+
+	return hourMin, nil
 }
 
 func (s *Schedule) HasDecentTimeframe(day time.Weekday) bool {

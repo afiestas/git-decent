@@ -182,3 +182,17 @@ func TestClosestDecentMinute(t *testing.T) {
 	assert.Equal(t, 2639, nMins)
 	assert.Equal(t, 10*60, minute)
 }
+
+func BenchmarkNewScheduleFromRaw(b *testing.B) {
+	raw := RawScheduleConfig{
+		Days: map[time.Weekday]string{
+			time.Monday:    "10:00/11:00, 13:00/14:00",
+			time.Wednesday: "10:00/11:00",
+			time.Friday:    "10:00/11:00",
+		},
+	}
+
+	for i := 0; i < b.N; i++ {
+		NewScheduleFromRaw(&raw)
+	}
+}
