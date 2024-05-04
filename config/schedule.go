@@ -67,33 +67,22 @@ func NewScheduleFromRaw(config *RawScheduleConfig) (Schedule, error) {
 		tRange := parseFrames(v)
 		for _, r := range tRange {
 			if len(r) != 11 {
-				errs = append(
-					errs,
-					ParseDayError{
-						Day:   d,
-						error: fmt.Errorf("time range format should be 04:00/18:00 but instead %s given", r),
-					},
-				)
+				err := fmt.Errorf("time range format should be 04:00/18:00 but instead %s given", r)
+				errs = append(errs, ParseDayError{Day: d, error: err})
 				continue
 			}
 
 			sMin := r[:5]
 			sTime, err := parseTime(sMin)
 			if err != nil {
-				errs = append(
-					errs,
-					err,
-				)
+				errs = append(errs, err)
 				continue
 			}
 
 			eMin := r[6:]
 			eTime, err := parseTime(eMin)
 			if err != nil {
-				errs = append(
-					errs,
-					err,
-				)
+				errs = append(errs, err)
 				continue
 			}
 
