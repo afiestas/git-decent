@@ -53,11 +53,9 @@ func TestScheduleFromRaw(t *testing.T) {
 		assert.Len(t, s.DecentTimeFrames(time.Monday), 2)
 
 		frames := s.DecentTimeFrames(time.Monday)
-		assert.Equal(t, frames[0].nextFrame, frames[1])
-		assert.Nil(t, frames[1].nextFrame)
 
-		assert.Equal(t, frames[0], s.Days[time.Monday].Minutes[sminute])
-		assert.Equal(t, frames[1], s.Days[time.Monday].Minutes[18*60])
+		assert.Equal(t, frames[0], *s.Days[time.Monday].Minutes[sminute])
+		assert.Equal(t, frames[1], *s.Days[time.Monday].Minutes[18*60])
 	})
 }
 

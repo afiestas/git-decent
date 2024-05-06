@@ -11,7 +11,6 @@ import (
 type TimeFrame struct {
 	StartMinute int
 	EndMinute   int
-	nextFrame   *TimeFrame
 }
 
 type HourMin struct {
@@ -26,8 +25,9 @@ func (t TimeFrame) String() string {
 // A list of day minutes that are work times
 type DayMinutes [1440]*TimeFrame
 type Day struct {
-	Minutes      DayMinutes
-	DecentFrames []*TimeFrame
+	Minutes          DayMinutes
+	DecentFrames     []TimeFrame
+	ClosestDecentDay time.Weekday
 }
 
 func (d Day) String() string {
@@ -58,14 +58,22 @@ func NewScheduleFromRaw(config *RawScheduleConfig) (Schedule, error) {
 	errs := []error{}
 
 	s := Schedule{}
+	first := -1
+	daysWithout := 0
 	for d := time.Sunday; d <= time.Saturday; d++ {
 		v, exists := config.Days[d]
 		if !exists {
+			daysWithout++
 			continue
 		}
 
+		if first == -1 {
+			first = int(d)
+		}
+		s.Days[d].ClosestDecentDay = d
 		tRange := parseFrames(v)
-		for _, r := range tRange {
+		s.Days[d].DecentFrames = make([]TimeFrame, len(tRange))
+		for k, r := range tRange {
 			if len(r) != 11 {
 				err := fmt.Errorf("time range format should be 04:00/18:00 but instead %s given", r)
 				errs = append(errs, ParseDayError{Day: d, error: err})
@@ -94,16 +102,20 @@ func NewScheduleFromRaw(config *RawScheduleConfig) (Schedule, error) {
 			}
 
 			timeFrame := TimeFrame{StartMinute: sMinute, EndMinute: eMinute}
-			if l := len(s.Days[d].DecentFrames); l > 0 {
-				s.Days[d].DecentFrames[l-1].nextFrame = &timeFrame
-			}
-			s.Days[d].DecentFrames = append(s.Days[d].DecentFrames, &timeFrame)
+			s.Days[d].DecentFrames[k] = timeFrame
 
 			for m := sMinute; m <= eMinute; m++ {
 				s.Days[d].Minutes[m] = &timeFrame
 			}
 
 		}
+		for x := daysWithout; x > 0; x-- {
+			s.Days[int(d)-x].ClosestDecentDay = d
+		}
+		daysWithout = 0
+	}
+	if len(s.Days[time.Saturday].DecentFrames) == 0 {
+		s.Days[time.Saturday].ClosestDecentDay = time.Weekday(first)
 	}
 
 	if len(errs) > 0 {
