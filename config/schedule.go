@@ -179,24 +179,13 @@ func (s *Schedule) HasDecentTimeframe(day time.Weekday) bool {
 	return false
 }
 
-func (s *Schedule) DecentTimeFrames(day time.Weekday) []*TimeFrame {
+func (s *Schedule) DecentTimeFrames(day time.Weekday) []TimeFrame {
 	return s.Days[day].DecentFrames
 }
 
 func (s *Schedule) ClosestDecentDay(day time.Weekday) (time.Weekday, int) {
-	n := 0
-	if len(s.Days[day].DecentFrames) > 0 {
-		return day, n
-	}
-
-	for nextDay := (day + 1) % 7; nextDay != day; nextDay = (nextDay + 1) % 7 {
-		n++
-		if len(s.Days[nextDay].DecentFrames) > 0 {
-			return nextDay, n
-		}
-	}
-
-	return day, n
+	next := s.Days[day].ClosestDecentDay
+	return next, (int(next-day) + 7) % 7
 }
 
 func (s *Schedule) ClosestDecentFrame(date time.Time) (time.Weekday, int, int) {
@@ -224,8 +213,8 @@ func (s *Schedule) ClosestDecentFrame(date time.Time) (time.Weekday, int, int) {
 func (s *Schedule) ClosestDecentMinute(date time.Time) (int, int) {
 	wDay := date.Weekday()
 	dMin := DayMinute(date)
-	frame := s.Days[wDay].Minutes[dMin]
-	if frame != nil {
+	frameMin := s.Days[wDay].Minutes[dMin]
+	if frameMin != nil {
 		return dMin, 0
 	}
 
@@ -236,8 +225,8 @@ func (s *Schedule) ClosestDecentMinute(date time.Time) (int, int) {
 	}
 
 	day, nDay := s.ClosestDecentDay(date.Weekday() + 1)
-	nDay += 1
-	frame = s.Days[day].DecentFrames[0]
+	nDay++
+	frame := &s.Days[day].DecentFrames[0]
 	hoursToaDd := 24 - date.Hour()
 
 	hoursToaDd += (nDay - 1) * 24
