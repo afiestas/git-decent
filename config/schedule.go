@@ -237,7 +237,7 @@ func (s *Schedule) ClosestDecentMinute(date time.Time) (int, int) {
 func (s Schedule) String() string {
 	ss := ""
 	for day, sch := range s.Days {
-		ss = fmt.Sprintf("%s%s has %d decent frames\n\t", ss, time.Weekday(day), len(sch.DecentFrames))
+		ss = fmt.Sprintf("%s%s has %d decent frames next %s\n\t", ss, time.Weekday(day), len(sch.DecentFrames), sch.ClosestDecentDay)
 		for _, timeFrame := range sch.DecentFrames {
 			ss = fmt.Sprintf("%s%s, ", ss, timeFrame)
 		}
