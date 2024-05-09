@@ -22,7 +22,7 @@ maintain appearances while working during unconventional hours...`,
 		if err != nil {
 			fmt.Println("Couldn't get cwd", err)
 		}
-		r, err := internal.NewGitRepo(cwd, false)
+		r, err := internal.NewGitRepo(cwd)
 		if err != nil {
 			fmt.Println("Couldn't get cwd", err)
 		}

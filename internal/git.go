@@ -46,7 +46,7 @@ func NewGitRepoWithoutGlobalConfig(dir string) (*GitRepo, error) {
 	return repo, err
 }
 
-func NewGitRepo(dir string, noGlobalConfig bool) (*GitRepo, error) {
+func NewGitRepo(dir string) (*GitRepo, error) {
 	return newGitRepo(dir)
 }
 
