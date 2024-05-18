@@ -37,6 +37,13 @@ type Commit struct {
 	Next    *Commit
 }
 
+type CommandError struct {
+	error
+	Command string
+	Stdout  string
+	Stderr  string
+}
+
 func NewGitRepoWithoutGlobalConfig(dir string) (*GitRepo, error) {
 	repo, err := newGitRepo(dir)
 	if err != nil {
@@ -79,13 +86,30 @@ func (r *GitRepo) commandWithEnv(env []string, arg ...string) (string, error) {
 
 	err := cmd.Run()
 	if err != nil {
-		return "", fmt.Errorf("git command error %s %s %w", cmd.Stdout, cmd.Stderr, err)
+		command := cmd.String()
+		return "", &CommandError{
+			error:   fmt.Errorf("git %s error %s %s %w", command, cmd.Stdout, cmd.Stderr, err),
+			Stdout:  stdoutBuf.String(),
+			Stderr:  stderrBuf.String(),
+			Command: command,
+		}
+
 	}
 	return stdoutBuf.String(), nil
 }
 
 func (r *GitRepo) command(arg ...string) (string, error) {
 	return r.commandWithEnv([]string{}, arg...)
+}
+
+func (r *GitRepo) IsGitRepo() bool {
+	output, err := r.command("rev-parse", "--is-inside-work-tree")
+	if err != nil {
+		return false
+	}
+
+	cleaned := strings.TrimSpace(string(output))
+	return cleaned == "true"
 }
 
 func (r *GitRepo) Init(rT RepoType) error {

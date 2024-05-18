@@ -2,9 +2,12 @@
 package config
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -18,6 +21,20 @@ type HourMin struct {
 	minute int
 }
 
+type TimeFrames []TimeFrame
+
+func (t TimeFrames) String() string {
+	var builder strings.Builder
+	for k, value := range t {
+		if k > 0 {
+			builder.WriteString(" | ")
+		}
+		builder.WriteString(value.String())
+	}
+
+	return builder.String()
+}
+
 func (t TimeFrame) String() string {
 	return fmt.Sprintf("%02d:%02d - %02d:%02d", t.StartMinute/60, t.StartMinute%60, t.EndMinute/60, t.EndMinute%60)
 }
@@ -26,7 +43,7 @@ func (t TimeFrame) String() string {
 type DayMinutes [1440]*TimeFrame
 type Day struct {
 	Minutes          DayMinutes
-	DecentFrames     []TimeFrame
+	DecentFrames     TimeFrames
 	ClosestDecentDay time.Weekday
 }
 
@@ -175,7 +192,7 @@ func parseTime(time string) (HourMin, error) {
 	return hourMin, nil
 }
 
-func NewScheduleFromPlainText(plainText io.Reader) (Schedule, error) {
+func NewScheduleFromPlainText(plainText io.Reader) (*RawScheduleConfig, error) {
 	rawC := RawScheduleConfig{
 		Days: make(map[time.Weekday]string),
 	}
@@ -220,11 +237,11 @@ func NewScheduleFromPlainText(plainText io.Reader) (Schedule, error) {
 		case "sunday":
 			rawC.Days[time.Sunday] = frames
 		default:
-			return Schedule{}, fmt.Errorf("found a weekday that can't be handled %s", day)
+			return nil, fmt.Errorf("found a weekday that can't be handled %s", day)
 		}
 	}
 
-	return NewScheduleFromRaw(&rawC)
+	return &rawC, nil
 }
 
 func (s *Schedule) HasDecentTimeframe(day time.Weekday) bool {

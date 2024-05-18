@@ -69,7 +69,9 @@ func TestScheduleFromPlainText(t *testing.T) {
 	     Friday = 09:00/13:00, 14:00/17:00
 	`
 
-	s, err := NewScheduleFromPlainText(strings.NewReader(plainText))
+	rawC, err := NewScheduleFromPlainText(strings.NewReader(plainText))
+	assert.NoError(t, err)
+	s, err := NewScheduleFromRaw(&rawC)
 	assert.NoError(t, err)
 
 	assert.Equal(t, time.Monday, s.Days[time.Saturday].ClosestDecentDay)

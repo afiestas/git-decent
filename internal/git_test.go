@@ -157,6 +157,17 @@ func TestFixtures(t *testing.T) {
 	})
 }
 
+func TestIsGitRepo(t *testing.T) {
+	dir := createTempDir(t, "not-a-repo")
+	repo, err := NewGitRepo(dir)
+	assert.NoError(t, err)
+
+	assert.False(t, repo.IsGitRepo())
+
+	NewRepositoryBuilder(t).At(dir).MustBuild()
+	assert.True(t, repo.IsGitRepo())
+}
+
 func TestConfig(t *testing.T) {
 	r, err := NewRepositoryBuilder(t).As(Working).Build()
 	require.NoError(t, err)
