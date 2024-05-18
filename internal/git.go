@@ -266,10 +266,12 @@ func (r *GitRepo) AmendDates(log GitLog) error {
 
 	var builder strings.Builder
 	for _, commit := range log {
+		newDate := commit.Date.Format("Mon, 02 Jan 2006 15:04:05 -0700")
 		builder.WriteString(fmt.Sprintf(
-			"pick %s\nexec git commit --amend --no-edit --date=\"%s\"\n",
+			"pick %s\nexec GIT_COMMITTER_DATE=\"%s\" git commit --amend --no-edit --date=\"%s\"\n",
 			commit.Hash[:7],
-			commit.Date.Format("Mon, 02 Jan 2006 15:04:05 -0700"),
+			newDate,
+			newDate,
 		))
 	}
 
