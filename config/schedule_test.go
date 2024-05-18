@@ -1,6 +1,7 @@
 package config
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -59,6 +60,31 @@ func TestScheduleFromRaw(t *testing.T) {
 	})
 }
 
+func TestScheduleFromPlainText(t *testing.T) {
+	plainText := `[decent]
+	     Monday = 09:00/13:00, 14:00/17:00
+	     Tuesday=09:00/13:00, 14:00/17:00
+	     Wednesday= 09:00/13:00, 14:00/17:00
+	     Thursday =09:00/13:00, 14:00/17:00
+	     Friday = 09:00/13:00, 14:00/17:00
+	`
+
+	s, err := NewScheduleFromPlainText(strings.NewReader(plainText))
+	assert.NoError(t, err)
+
+	assert.Equal(t, time.Monday, s.Days[time.Saturday].ClosestDecentDay)
+	assert.Equal(t, time.Monday, s.Days[time.Monday].ClosestDecentDay)
+	assert.Equal(t, time.Tuesday, s.Days[time.Tuesday].ClosestDecentDay)
+	assert.Equal(t, time.Wednesday, s.Days[time.Wednesday].ClosestDecentDay)
+	assert.Equal(t, time.Thursday, s.Days[time.Thursday].ClosestDecentDay)
+	assert.Equal(t, time.Friday, s.Days[time.Friday].ClosestDecentDay)
+	assert.NotNil(t, s.Days[time.Monday].Minutes[60*9])
+	assert.NotNil(t, s.Days[time.Tuesday].Minutes[60*10])
+	assert.NotNil(t, s.Days[time.Wednesday].Minutes[60*13])
+	assert.NotNil(t, s.Days[time.Thursday].Minutes[60*14])
+	assert.NotNil(t, s.Days[time.Friday].Minutes[60*17])
+	assert.Nil(t, s.Days[time.Saturday].Minutes[60*9])
+}
 func TestClosestDecentDay(t *testing.T) {
 	raw := RawScheduleConfig{
 		Days: map[time.Weekday]string{

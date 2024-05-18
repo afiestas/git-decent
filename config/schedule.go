@@ -175,6 +175,58 @@ func parseTime(time string) (HourMin, error) {
 	return hourMin, nil
 }
 
+func NewScheduleFromPlainText(plainText io.Reader) (Schedule, error) {
+	rawC := RawScheduleConfig{
+		Days: make(map[time.Weekday]string),
+	}
+	s := bufio.NewScanner(plainText)
+
+	for s.Scan() {
+		line := s.Text()
+		if i := strings.Index(line, "[decent]"); i != -1 {
+			continue
+		}
+
+		if i := strings.Index(line, "#"); i != -1 {
+			line = line[:i]
+		}
+
+		line = strings.TrimSpace(line)
+		if len(line) == 0 {
+			continue
+		}
+
+		eq := strings.Index(line, "=")
+		if eq == -1 {
+			continue
+		}
+
+		day := strings.TrimSpace(strings.ToLower(line[:eq]))
+		frames := strings.TrimSpace(line[eq+1:])
+
+		switch day {
+		case "monday":
+			rawC.Days[time.Monday] = frames
+		case "tuesday":
+			rawC.Days[time.Tuesday] = frames
+		case "wednesday":
+			rawC.Days[time.Wednesday] = frames
+		case "thursday":
+			rawC.Days[time.Thursday] = frames
+		case "friday":
+			rawC.Days[time.Friday] = frames
+		case "saturday":
+			rawC.Days[time.Saturday] = frames
+		case "sunday":
+			rawC.Days[time.Sunday] = frames
+		default:
+			return Schedule{}, fmt.Errorf("found a weekday that can't be handled %s", day)
+		}
+	}
+
+	return NewScheduleFromRaw(&rawC)
+}
+
 func (s *Schedule) HasDecentTimeframe(day time.Weekday) bool {
 	return false
 }
