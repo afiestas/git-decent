@@ -89,6 +89,9 @@ maintain appearances while working during unconventional hours...`,
 		}
 
 		fmt.Println("Unpushed commits:", secondaryStyle.Styled(fmt.Sprintf("%d", len(log))))
+		if len(log) == 0 {
+			return
+		}
 
 		amendedCount := 0
 		var lastDate *time.Time = nil
