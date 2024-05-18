@@ -23,12 +23,12 @@ var configTemplate string
 var profile = termenv.ColorProfile()
 var (
 	primaryStyle   = termenv.Style{}.Foreground(termenv.ForegroundColor())  // Bright Blue and bold for primary elements
-	secondaryStyle = termenv.Style{}.Foreground(profile.Color("12"))        // Bright Cyan for secondary elements
-	accentStyle    = termenv.Style{}.Foreground(profile.Color("12")).Bold() // Bright Red and bold for accents
+	secondaryStyle = termenv.Style{}.Foreground(profile.Color("14")).Bold() // Bright Cyan for secondary elements
+	accentStyle    = termenv.Style{}.Foreground(profile.Color("11")).Bold() // Bright Red and bold for accents
 	successStyle   = termenv.Style{}.Foreground(profile.Color("2")).Bold()  // Bright Green for success messages
 	warningStyle   = termenv.Style{}.Foreground(profile.Color("3"))         // Yellow for warnings
 	errorStyle     = termenv.Style{}.Foreground(profile.Color("9")).Bold()  // Bright Red for errors
-	infoStyle      = termenv.Style{}.Foreground(profile.Color("14"))        // Bright Cyan for informational text
+	infoStyle      = termenv.Style{}.Foreground(profile.Color("12")).Bold() // Bright Cyan for informational text
 )
 
 var rootCmd = &cobra.Command{
@@ -43,15 +43,6 @@ maintain appearances while working during unconventional hours...`,
 			panic(err)
 		}
 		defer restoreConsole()
-
-		// Use styles
-		// println(primaryStyle.Styled("Primary: Important user interface elements."))
-		// println(secondaryStyle.Styled("Secondary: Less important information."))
-		// println(accentStyle.Styled("Accent: Elements that should stand out."))
-		// println(successStyle.Styled("Success: Positive feedback or confirmation."))
-		// println(warningStyle.Styled("Warning: Caution required."))
-		// println(errorStyle.Styled("Error: Critical issues that need attention."))
-		// println(infoStyle.Styled("Info: Additional helpful information."))
 
 		r, err := getRepo()
 		if err != nil {
@@ -76,7 +67,7 @@ maintain appearances while working during unconventional hours...`,
 
 		rc, _ := config.GetGitRawConfig(&ops)
 		s, _ := config.NewScheduleFromRaw(&rc)
-		fmt.Println(secondaryStyle.Styled("Schedule:"))
+		fmt.Println(infoStyle.Styled("Schedule:"))
 		printSchedule(s)
 		fmt.Println()
 
@@ -87,9 +78,9 @@ maintain appearances while working during unconventional hours...`,
 			return
 		}
 
-		fmt.Println("Gettign diff")
+		fmt.Println(infoStyle.Styled("Current status"))
 		upstream := r.BranchUpstream(r.CurrentBranch())
-		fmt.Println("Upstream branch", accentStyle.Styled(upstream))
+		fmt.Println("Upstream branch", secondaryStyle.Styled(upstream))
 		aLog := fmt.Sprintf("%s...", upstream)
 		log, err := r.LogWithRevision(aLog)
 		if err != nil {
@@ -97,7 +88,7 @@ maintain appearances while working during unconventional hours...`,
 			return
 		}
 
-		fmt.Println("Unpushed commits:", accentStyle.Styled(fmt.Sprintf("%d", len(log))))
+		fmt.Println("Unpushed commits:", secondaryStyle.Styled(fmt.Sprintf("%d", len(log))))
 
 		var lastDate *time.Time = nil
 		for k, commit := range log {
@@ -105,11 +96,45 @@ maintain appearances while working during unconventional hours...`,
 				commit.Prev = log[k-1]
 				lastDate = &commit.Prev.Date
 			}
+			commitDate := commit.Date
+			amended := internal.Amend(commitDate, lastDate, s)
+			sameDay := amended.Day() == commit.Date.Day()
+			sameTime := amended.Minute() == commitDate.Minute() && amended.Hour() == commitDate.Hour()
 
-			amended := internal.Amend(commit.Date, lastDate, s)
-			fmt.Println("Commit", commit.Message)
-			fmt.Println("\tOriginal", commit.Date.Format(time.DateTime))
-			fmt.Println("\tAmended", amended.Format(time.DateTime))
+			fmt.Println("✨", commit.Message)
+			day := commitDate.Format("Mon")
+			if !sameDay {
+				day = accentStyle.Styled(day)
+			}
+			timeStr := commitDate.Format("15:04")
+			if !sameTime {
+				timeStr = secondaryStyle.Styled(timeStr)
+			}
+
+			fmt.Printf(
+				"    %s %s %s ",
+				commitDate.Format(time.DateOnly),
+				day,
+				timeStr,
+			)
+			if amended == commit.Date {
+				fmt.Printf("✅")
+			} else {
+				day := amended.Format("Mon")
+				if !sameDay {
+					day = accentStyle.Styled(day)
+				}
+				time := amended.Format("15:04")
+				if !sameTime {
+					time = secondaryStyle.Styled(time)
+				}
+				fmt.Printf("➡️ %s %s",
+					day,
+					time,
+				)
+			}
+			fmt.Println()
+
 			commit.Date = amended
 			log[k] = commit
 		}
