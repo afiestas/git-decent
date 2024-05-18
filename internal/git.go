@@ -327,7 +327,6 @@ func parseLog(output string) (GitLog, error) {
 	for _, rawCommit := range rawCommits {
 		parts := strings.Split(rawCommit, "\x1f")
 		if len(parts) < 4 {
-			fmt.Println("[WARN]: Couldn't parse commit from log")
 			continue
 		}
 		commit := Commit{
