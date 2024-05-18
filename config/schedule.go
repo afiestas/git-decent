@@ -271,7 +271,11 @@ func (s *Schedule) ClosestDecentMinute(date time.Time) (int, int) {
 		}
 	}
 
-	day, nDay := s.ClosestDecentDay(date.Weekday() + 1)
+	nextDay := wDay + 1
+	if nextDay > 6 {
+		nextDay = 0
+	}
+	day, nDay := s.ClosestDecentDay(nextDay)
 	nDay++
 	frame := &s.Days[day].DecentFrames[0]
 	hoursToaDd := 24 - date.Hour()

@@ -161,6 +161,13 @@ func TestClosestDecentMinute(t *testing.T) {
 	minute, nMins = schedule.ClosestDecentMinute(pTime)
 	assert.Equal(t, 2639, nMins)
 	assert.Equal(t, 10*60, minute)
+
+	pTime, err = time.Parse(layout, "2024-01-27 14:01:00")
+	assert.NoError(t, err)
+
+	minute, nMins = schedule.ClosestDecentMinute(pTime)
+	assert.Equal(t, 2639, nMins)
+	assert.Equal(t, 10*60, minute)
 }
 
 func BenchmarkNewScheduleFromRaw(b *testing.B) {
