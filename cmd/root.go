@@ -138,6 +138,21 @@ maintain appearances while working during unconventional hours...`,
 			commit.Date = amended
 			log[k] = commit
 		}
+		answer, err := yesNoQuestion("Do you want to ament the dates?")
+		if err != nil {
+			printError(err)
+			return
+		}
+
+		if !answer {
+			return
+		}
+
+		err = r.AmendDates(log)
+		if err != nil {
+			fmt.Println("❌", errorStyle.Styled("Error amending the dates"))
+			printError(err)
+		}
 	},
 }
 
