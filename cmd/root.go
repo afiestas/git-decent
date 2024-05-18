@@ -22,13 +22,13 @@ var configTemplate string
 
 var profile = termenv.ColorProfile()
 var (
-	primaryStyle   = termenv.Style{}.Foreground(termenv.ForegroundColor())  // Bright Blue and bold for primary elements
-	secondaryStyle = termenv.Style{}.Foreground(profile.Color("14")).Bold() // Bright Cyan for secondary elements
-	accentStyle    = termenv.Style{}.Foreground(profile.Color("11")).Bold() // Bright Red and bold for accents
-	successStyle   = termenv.Style{}.Foreground(profile.Color("2")).Bold()  // Bright Green for success messages
-	warningStyle   = termenv.Style{}.Foreground(profile.Color("3"))         // Yellow for warnings
-	errorStyle     = termenv.Style{}.Foreground(profile.Color("9")).Bold()  // Bright Red for errors
-	infoStyle      = termenv.Style{}.Foreground(profile.Color("12")).Bold() // Bright Cyan for informational text
+	primaryStyle   = termenv.Style{}.Foreground(termenv.ForegroundColor())
+	secondaryStyle = termenv.Style{}.Foreground(profile.Color("14")).Bold()
+	accentStyle    = termenv.Style{}.Foreground(profile.Color("11")).Bold()
+	successStyle   = termenv.Style{}.Foreground(profile.Color("2")).Bold()
+	warningStyle   = termenv.Style{}.Foreground(profile.Color("3"))
+	errorStyle     = termenv.Style{}.Foreground(profile.Color("9")).Bold()
+	infoStyle      = termenv.Style{}.Foreground(profile.Color("12")).Bold()
 )
 
 var rootCmd = &cobra.Command{
