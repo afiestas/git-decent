@@ -74,6 +74,7 @@ func (r *GitRepo) commandWithEnv(env []string, arg ...string) (string, error) {
 	cmd := exec.Command(g, arg...)
 	cmd.Dir = r.Dir
 
+	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, env...)
 
 	if r.configDir != "" {
@@ -279,6 +280,7 @@ func (r *GitRepo) AmendDates(log GitLog) error {
 	if err != nil {
 		return fmt.Errorf("failed to create tmp file for rebase todo: %w", err)
 	}
+	fmt.Println("Amend file", file.Name())
 	defer os.Remove(file.Name())
 
 	_, err = file.WriteString(builder.String())
