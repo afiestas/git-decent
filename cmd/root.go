@@ -90,6 +90,7 @@ maintain appearances while working during unconventional hours...`,
 
 		fmt.Println("Unpushed commits:", secondaryStyle.Styled(fmt.Sprintf("%d", len(log))))
 
+		amendedCount := 0
 		var lastDate *time.Time = nil
 		for k, commit := range log {
 			if commit.Prev != nil {
@@ -120,6 +121,7 @@ maintain appearances while working during unconventional hours...`,
 			if amended == commit.Date {
 				fmt.Printf("✅")
 			} else {
+				amendedCount += 1
 				day := amended.Format("Mon")
 				if !sameDay {
 					day = accentStyle.Styled(day)
@@ -138,6 +140,12 @@ maintain appearances while working during unconventional hours...`,
 			commit.Date = amended
 			log[k] = commit
 		}
+
+		fmt.Println("Amended commits:", secondaryStyle.Styled(fmt.Sprintf("%d", amendedCount)))
+		if amendedCount == 0 {
+			return
+		}
+
 		answer, err := yesNoQuestion("Do you want to ament the dates?")
 		if err != nil {
 			printError(err)
