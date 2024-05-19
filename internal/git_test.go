@@ -174,7 +174,8 @@ func TestConfig(t *testing.T) {
 	input := []byte(`[decent]
 		Monday = 09:00/17:00, 18:00/19:00
 		Tuesday = 10:00/11:00
-	`)
+`)
+
 	cFile := filepath.Join(r.Dir, ".git/config")
 	f, err := os.OpenFile(cFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	require.NoError(t, err)
@@ -186,10 +187,19 @@ func TestConfig(t *testing.T) {
 	assert.Error(t, err)
 	assert.Empty(t, options)
 	options, err = r.GetSectionOptions("decent")
+	assert.NoError(t, err)
 	assert.Len(t, options, 2)
 
 	assert.Equal(t, "09:00/17:00, 18:00/19:00", options["monday"])
 	assert.Equal(t, "10:00/11:00", options["tuesday"])
+
+	o, err := r.GetConfig("decent.Wednesday")
+	assert.Empty(t, o)
+	assert.Error(t, err)
+
+	o, err = r.GetConfig("decent.Tuesday")
+	assert.NoError(t, err)
+	assert.Equal(t, "10:00/11:00", o)
 }
 
 func TestLogWithRevisionFromUpstream(t *testing.T) {

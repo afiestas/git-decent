@@ -3,7 +3,6 @@ package internal
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -89,7 +88,7 @@ func (r *GitRepo) commandWithEnv(env []string, arg ...string) (string, error) {
 	if err != nil {
 		command := cmd.String()
 		return "", &CommandError{
-			error:   fmt.Errorf("git %s error %s %s %w", command, cmd.Stdout, cmd.Stderr, err),
+			error:   fmt.Errorf("%s error %s %s %w", command, cmd.Stdout, cmd.Stderr, err),
 			Stdout:  stdoutBuf.String(),
 			Stderr:  stderrBuf.String(),
 			Command: command,
@@ -213,6 +212,14 @@ func (r *GitRepo) SetConfig(key string, value string) error {
 	return err
 }
 
+func (r *GitRepo) GetConfig(option string) (string, error) {
+	out, err := r.command("config", "--get", option)
+	if err != nil {
+		return "", fmt.Errorf("git config failed, seciton does not exists? %w", err)
+	}
+	return strings.TrimSpace(out), nil
+}
+
 func (r *GitRepo) GetSectionOptions(name string) (map[string]string, error) {
 	ops := map[string]string{}
 	out, err := r.command("config", "--get-regexp", fmt.Sprintf("^%s.*", name))
@@ -220,12 +227,12 @@ func (r *GitRepo) GetSectionOptions(name string) (map[string]string, error) {
 		return ops, fmt.Errorf("git config failed, seciton does not exists? %w", err)
 	}
 
-	rOps := strings.Split(out, "\n")
+	rOps := strings.Split(strings.TrimSpace(out), "\n")
 	for _, option := range rOps {
 		option = strings.TrimSpace(option)
 		parts := strings.SplitN(option, " ", 2)
 		if len(parts) != 2 {
-			return ops, errors.New(fmt.Sprintf("git config option with invalid value %s", option))
+			return ops, fmt.Errorf("git config option with invalid value (%s)", option)
 		}
 
 		key := strings.Replace(parts[0], fmt.Sprintf("%s.", name), "", 1)
