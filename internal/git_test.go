@@ -169,8 +169,7 @@ func TestIsGitRepo(t *testing.T) {
 }
 
 func TestConfig(t *testing.T) {
-	r, err := NewRepositoryBuilder(t).As(Working).Build()
-	require.NoError(t, err)
+	r := NewRepositoryBuilder(t).As(Working).MustBuild()
 
 	input := []byte(`[decent]
 		Monday = 09:00/17:00, 18:00/19:00
