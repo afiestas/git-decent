@@ -31,6 +31,7 @@ func commandPreRun(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		panic(err)
 	}
+
 	repo, err := getRepoReady()
 	if err != nil {
 		printError(err)
@@ -42,15 +43,14 @@ func commandPreRun(cmd *cobra.Command, args []string) error {
 
 	_, err = repo.LogWithRevision("-1")
 	if err != nil {
-		fmt.Println(errorStyle.Styled("❌ Couldn't get log"))
-		printError(err)
-		return err
+		return fmt.Errorf(errorStyle.Styled("❌ No commits found"))
 	}
 
 	decentContext := &DecentContext{
 		restoreConsole: restoreConsole,
 		gitRepo:        repo,
 	}
+
 	ctx := context.WithValue(cmd.Context(), decentContextKey, decentContext)
 	cmd.SetContext(ctx)
 
