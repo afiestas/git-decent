@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"context"
+	_ "embed"
 	"errors"
 	"fmt"
 	"os"
@@ -19,6 +20,20 @@ import (
 type contextKey string
 
 const decentContextKey contextKey = "decentContext"
+
+//go:embed config-template.ini
+var configTemplate string
+
+var profile = termenv.ColorProfile()
+var (
+	primaryStyle   = termenv.Style{}.Foreground(termenv.ForegroundColor())
+	secondaryStyle = termenv.Style{}.Foreground(profile.Color("14")).Bold()
+	accentStyle    = termenv.Style{}.Foreground(profile.Color("11")).Bold()
+	successStyle   = termenv.Style{}.Foreground(profile.Color("2")).Bold()
+	warningStyle   = termenv.Style{}.Foreground(profile.Color("3"))
+	errorStyle     = termenv.Style{}.Foreground(profile.Color("9")).Bold()
+	infoStyle      = termenv.Style{}.Foreground(profile.Color("12")).Bold()
+)
 
 type DecentContext struct {
 	restoreConsole func() error

@@ -2,29 +2,13 @@
 package cmd
 
 import (
-	_ "embed"
 	"fmt"
 	"os"
 	"time"
 
 	"github.com/afiestas/git-decent/config"
 	"github.com/afiestas/git-decent/internal"
-	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
-)
-
-//go:embed config-template.ini
-var configTemplate string
-
-var profile = termenv.ColorProfile()
-var (
-	primaryStyle   = termenv.Style{}.Foreground(termenv.ForegroundColor())
-	secondaryStyle = termenv.Style{}.Foreground(profile.Color("14")).Bold()
-	accentStyle    = termenv.Style{}.Foreground(profile.Color("11")).Bold()
-	successStyle   = termenv.Style{}.Foreground(profile.Color("2")).Bold()
-	warningStyle   = termenv.Style{}.Foreground(profile.Color("3"))
-	errorStyle     = termenv.Style{}.Foreground(profile.Color("9")).Bold()
-	infoStyle      = termenv.Style{}.Foreground(profile.Color("12")).Bold()
 )
 
 var rootCmd = &cobra.Command{
