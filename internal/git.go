@@ -287,6 +287,7 @@ func (r *GitRepo) AmendDates(log GitLog) error {
 	if err != nil {
 		return fmt.Errorf("failed to create tmp file for rebase todo: %w", err)
 	}
+
 	defer os.Remove(file.Name())
 
 	_, err = file.WriteString(builder.String())

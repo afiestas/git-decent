@@ -218,6 +218,7 @@ func TestLogWithRevisionFromUpstream(t *testing.T) {
 
 	aLog := fmt.Sprintf("%s...", repo.BranchUpstream("main"))
 	cs, err := repo.LogWithRevision(aLog)
+	assert.NoError(t, err)
 	assert.Len(t, cs, 1)
 	assert.Equal(t, cs[0].Message, c.Message)
 }
@@ -228,10 +229,11 @@ func TestPushToOrigin(t *testing.T) {
 	bare, err := NewRepositoryBuilder(t).As(Bare).Build()
 	require.NoError(t, err)
 	commits, err := bare.Log()
+	assert.Error(t, err)
 	require.Empty(t, commits)
 
 	repo, err := NewRepositoryBuilder(t).As(Working).WithRandomCommits(amountCommits).WithOrigin(bare.Dir).Build()
-
+	assert.NoError(t, err)
 	err = repo.Push()
 	require.NoError(t, err)
 	commits, err = bare.Log()
