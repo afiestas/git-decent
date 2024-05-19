@@ -71,6 +71,20 @@ type ParseDayError struct {
 	Day time.Weekday
 }
 
+func NewScheduleFromMap(daysFrames map[string]string) (Schedule, error) {
+	rawC, err := GetGitRawConfig(&daysFrames)
+	if err != nil {
+		return Schedule{}, fmt.Errorf("couldn't get Raw config from map %w", err)
+	}
+
+	s, err := NewScheduleFromRaw(&rawC)
+	if err != nil {
+		return s, fmt.Errorf("couldn't get schedule from rawschedule %w", err)
+	}
+
+	return s, nil
+}
+
 func NewScheduleFromRaw(config *RawScheduleConfig) (Schedule, error) {
 	errs := []error{}
 

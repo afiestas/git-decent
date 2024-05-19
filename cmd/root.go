@@ -44,9 +44,12 @@ maintain appearances while working during unconventional hours...`,
 		r := decentContext.gitRepo
 
 		ops, _ := r.GetSectionOptions("decent")
+		s, err := config.NewScheduleFromMap(ops)
+		if err != nil {
+			printError(err)
+			return
+		}
 
-		rc, _ := config.GetGitRawConfig(&ops)
-		s, _ := config.NewScheduleFromRaw(&rc)
 		fmt.Println(infoStyle.Styled("Schedule:"))
 		printSchedule(s)
 		fmt.Println()
@@ -54,6 +57,7 @@ maintain appearances while working during unconventional hours...`,
 		fmt.Println(infoStyle.Styled("Current status"))
 		upstream := r.BranchUpstream(r.CurrentBranch())
 		fmt.Println("Upstream branch", secondaryStyle.Styled(upstream))
+
 		aLog := fmt.Sprintf("%s...", upstream)
 		log, err := r.LogWithRevision(aLog)
 		if err != nil {
