@@ -202,6 +202,20 @@ func TestConfig(t *testing.T) {
 	assert.Equal(t, "10:00/11:00", o)
 }
 
+func TestGetHook(t *testing.T) {
+	r := NewRepositoryBuilder(t).As(Working).MustBuild()
+	hook := filepath.Join(r.Dir, ".git/hooks/pre-commit")
+	os.WriteFile(hook, []byte(`some hook`), 0644)
+
+	content, err := r.GetHook("pre-commit")
+	assert.NoError(t, err)
+	assert.Equal(t, "some hook", content)
+
+	content, err = r.GetHook("pre-commit-non-existent")
+	assert.Error(t, err)
+	assert.Empty(t, content)
+}
+
 func TestLogWithRevisionFromUpstream(t *testing.T) {
 	bare, err := NewRepositoryBuilder(t).As(Bare).Build()
 	require.NoError(t, err)

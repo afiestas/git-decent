@@ -207,6 +207,21 @@ func (r *GitRepo) Commit(commit *Commit) error {
 	return nil
 }
 
+func (r *GitRepo) GetHook(name string) (string, error) {
+	dir, _ := r.GetConfig("core.hooksPath")
+	if dir == "" {
+		dir = filepath.Join(r.Dir, ".git/hooks")
+	}
+
+	file := filepath.Join(dir, name)
+	content, err := os.ReadFile(file)
+	if err != nil {
+		return "", err
+	}
+
+	return string(content), err
+}
+
 func (r *GitRepo) SetConfig(key string, value string) error {
 	_, err := r.command("config", "--local", key, value)
 	return err
