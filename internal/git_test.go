@@ -330,3 +330,35 @@ func TestAmendMultipleDatesWithoutRoot(t *testing.T) {
 		assert.Equal(t, time.Date(2022, 02, key+1, 0, 0, 0, 0, commit.Date.Location()), commit.Date)
 	}
 }
+
+func TestAmendSingleCommitNotHead(t *testing.T) {
+	repo := NewRepositoryBuilder(t).WithRandomCommits(3).MustBuild()
+	log, err := repo.LogWithRevision("-2")
+	assert.NoError(t, err)
+	assert.Len(t, log, 2)
+
+	log[1].Date = time.Date(2022, 02, 1, 0, 0, 0, 0, log[0].Date.Location())
+
+	err = repo.AmendDate(log[0])
+	assert.Error(t, err, "is not HEAD")
+}
+
+func TestAmendSingleCommit(t *testing.T) {
+	repo := NewRepositoryBuilder(t).WithRandomCommits(2).MustBuild()
+	log, err := repo.LogWithRevision("-1")
+	assert.NoError(t, err)
+	assert.Len(t, log, 1)
+
+	origDate := log[0].Date
+	log[0].Date = time.Date(2022, 02, 1, 0, 0, 0, 0, log[0].Date.Location())
+
+	err = repo.AmendDate(log[0])
+	assert.NoError(t, err)
+
+	changedLog, err := repo.LogWithRevision("-1")
+	assert.NoError(t, err)
+	assert.Len(t, log, 1)
+
+	fmt.Println(changedLog[0].Date, origDate)
+	assert.NotEqual(t, changedLog[0].Date, origDate)
+}

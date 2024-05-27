@@ -274,6 +274,28 @@ func (r *GitRepo) RootCommitHash() (string, error) {
 	return output, nil
 }
 
+func (r *GitRepo) AmendDate(commit *Commit) error {
+	log, err := r.LogWithRevision("-1")
+	if err != nil {
+		return fmt.Errorf("couldn't get log from repository %w", err)
+	}
+	if len(log) == 0 {
+		return fmt.Errorf("unexpected empty log")
+	}
+
+	head := log[0]
+	if head.Hash != commit.Hash {
+		return fmt.Errorf("amendDate: commit %s is not head (%s)", commit.Hash, head.Hash)
+	}
+
+	_, err = r.command("commit", "--amend", "--no-edit", "--date=\"Wed, 08 Nov 2023 17:00:12 +0000\"")
+	if err != nil {
+		return fmt.Errorf("amendDate: coulnd't amend the commit %w", err)
+	}
+
+	return nil
+}
+
 func (r *GitRepo) AmendDates(log GitLog) error {
 	hash, err := r.RootCommitHash()
 	if err != nil {
