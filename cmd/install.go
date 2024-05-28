@@ -7,7 +7,7 @@ import (
 )
 
 var installCdm = &cobra.Command{
-	Use:   "git decent install",
+	Use:   "install",
 	Short: "Installs git-hooks to make things automagic",
 	Long: `This command will optionally install two hooks,
 	one post-commit to amend the date and one pre-push to prevent pushes on

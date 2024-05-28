@@ -130,6 +130,7 @@ maintain appearances while working during unconventional hours...`,
 
 func Execute() {
 	rootCmd.AddCommand(hookCmd)
+	rootCmd.AddCommand(installCdm)
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
