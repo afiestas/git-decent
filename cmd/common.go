@@ -73,7 +73,6 @@ func commandPreRun(cmd *cobra.Command, args []string) error {
 }
 
 func commandPostRun(cmd *cobra.Command, args []string) {
-	cmd.Context()
 	if decentContext, ok := cmd.Context().Value(decentContextKey).(*DecentContext); ok {
 		defer decentContext.restoreConsole()
 	}
