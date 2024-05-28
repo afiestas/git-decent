@@ -122,6 +122,11 @@ var tests = []struct {
 }
 
 func TestAmendCommits(t *testing.T) {
+	testRandom = true
+	defer func() {
+		testRandom = false
+	}()
+
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			fixtures := makeFixtures(t, tc.initial, tc.amended)

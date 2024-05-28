@@ -17,7 +17,7 @@ func Amend(date time.Time, lastDate *time.Time, schedule config.Schedule) time.T
 	//minute when the commit was created
 	min := date.Minute() % 10
 	if min == 0 {
-		min = 5
+		min = randomMinute()
 	}
 
 	//If the commit being amended is before the previous commit, move it just after it
