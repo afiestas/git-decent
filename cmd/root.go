@@ -129,6 +129,7 @@ maintain appearances while working during unconventional hours...`,
 }
 
 func Execute() {
+	rootCmd.AddCommand(hookCmd)
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
