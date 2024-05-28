@@ -43,6 +43,20 @@ type CommandError struct {
 	Stderr  string
 }
 
+type RepoState int
+
+const (
+	Clean RepoState = iota
+	Merge
+	Rebase
+	CherryPick
+	Bisect
+)
+
+func (s RepoState) String() string {
+	return [...]string{"clean", "merge", "rebase", "cherry-pick", "bisect"}[s]
+}
+
 func NewGitRepoWithoutGlobalConfig(dir string) (*GitRepo, error) {
 	repo, err := newGitRepo(dir)
 	if err != nil {
@@ -173,6 +187,26 @@ func (r *GitRepo) CurrentBranch() string {
 		return ""
 	}
 	return strings.TrimSpace(string(output))
+}
+
+func (r *GitRepo) State() RepoState {
+	state := Clean
+
+	alteredStates := map[string]RepoState{
+		"MERGE_HEAD":       Merge,
+		"CHERRY_PICK_HEAD": CherryPick,
+		"BISECT_LOG":       Bisect,
+		"rebase-apply":     Rebase,
+		"rebase-merge":     Rebase,
+	}
+
+	for file, state := range alteredStates {
+		if _, err := os.Stat(filepath.Join(r.Dir, file)); err == nil {
+			return state
+		}
+	}
+
+	return state
 }
 
 func (r *GitRepo) BranchUpstream(branch string) string {

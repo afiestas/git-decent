@@ -89,6 +89,12 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 			return
 		}
 		r := decentContext.gitRepo
+
+		if state := r.State(); state != internal.Clean {
+			fmt.Println(errorStyle.Styled(fmt.Sprintf("❌ can't operate while %s is in progress", state)))
+			return
+		}
+
 		log, err := r.LogWithRevision("-1")
 		if err != nil {
 			fmt.Println(errorStyle.Styled("❌ couldn't get log from repo"))
