@@ -101,7 +101,7 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 			return
 		}
 
-		log, err := r.LogWithRevision("-1")
+		log, err := r.LogWithRevision("-2")
 		if err != nil {
 			fmt.Println(errorStyle.Styled("❌ couldn't get log from repo"))
 			printError(err)
@@ -124,9 +124,13 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 		printSchedule(s)
 		fmt.Println()
 
-		commit := log[0]
+		var lastDate *time.Time = nil
+		if len(log) > 1 {
+			lastDate = &log[0].Date
+		}
+		commit := log[1]
 		commitDate := commit.Date
-		amended := internal.Amend(commit.Date, nil, s)
+		amended := internal.Amend(commit.Date, lastDate, s)
 		sameDay := amended.Day() == commit.Date.Day()
 		sameTime := amended.Minute() == commitDate.Minute() && amended.Hour() == commitDate.Hour()
 
