@@ -322,7 +322,8 @@ func (r *GitRepo) AmendDate(commit *Commit) error {
 		return fmt.Errorf("amendDate: commit %s is not head (%s)", commit.Hash, head.Hash)
 	}
 
-	_, err = r.command("commit", "--amend", "--no-edit", "--date=\"Wed, 08 Nov 2023 17:00:12 +0000\"")
+	date := fmt.Sprintf("--date=\"%s\"", commit.Date.Format("Mon, 02 Jan 2006 15:04:05 -0700"))
+	_, err = r.command("commit", "--amend", "--no-edit", date)
 	if err != nil {
 		return fmt.Errorf("amendDate: coulnd't amend the commit %w", err)
 	}

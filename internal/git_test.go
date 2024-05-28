@@ -350,7 +350,8 @@ func TestAmendSingleCommit(t *testing.T) {
 	assert.Len(t, log, 1)
 
 	origDate := log[0].Date
-	log[0].Date = time.Date(2022, 02, 1, 0, 0, 0, 0, log[0].Date.Location())
+	changedDate := time.Date(2022, 02, 1, 0, 0, 0, 0, log[0].Date.Location())
+	log[0].Date = changedDate
 
 	err = repo.AmendDate(log[0])
 	assert.NoError(t, err)
@@ -360,5 +361,5 @@ func TestAmendSingleCommit(t *testing.T) {
 	assert.Len(t, log, 1)
 
 	fmt.Println(changedLog[0].Date, origDate)
-	assert.NotEqual(t, changedLog[0].Date, origDate)
+	assert.Equal(t, changedLog[0].Date, changedDate)
 }
