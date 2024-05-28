@@ -95,6 +95,12 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 			return
 		}
 
+		branch := r.CurrentBranch()
+		if branch == "HEAD" {
+			fmt.Println(errorStyle.Styled("❌ can't operate in detached head"))
+			return
+		}
+
 		log, err := r.LogWithRevision("-1")
 		if err != nil {
 			fmt.Println(errorStyle.Styled("❌ couldn't get log from repo"))
