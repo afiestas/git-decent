@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/afiestas/git-decent/config"
 	"github.com/afiestas/git-decent/internal"
 	"github.com/afiestas/git-decent/ui"
 	"github.com/spf13/cobra"
@@ -31,13 +30,7 @@ maintain appearances while working during unconventional hours...`,
 			return
 		}
 		r := decentContext.gitRepo
-
-		ops, _ := r.GetSectionOptions("decent")
-		s, err := config.NewScheduleFromMap(ops)
-		if err != nil {
-			Ui.PrintError(err)
-			return
-		}
+		s := *decentContext.schedule
 
 		Ui.Title("Schedule:")
 		Ui.PrintSchedule(s)

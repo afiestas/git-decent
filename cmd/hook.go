@@ -1,15 +1,10 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"os"
-	"os/signal"
-	"path/filepath"
-	"syscall"
 	"time"
 
-	"github.com/afiestas/git-decent/config"
 	"github.com/afiestas/git-decent/internal"
 	"github.com/afiestas/git-decent/ui"
 	"github.com/spf13/cobra"
@@ -42,17 +37,7 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 			return
 		}
 		r := decentContext.gitRepo
-
-		if state := r.State(); state != internal.Clean {
-			fmt.Println(ui.ErrorStyle.Styled(fmt.Sprintf("❌ can't operate while %s is in progress", state)))
-			return
-		}
-
-		branch := r.CurrentBranch()
-		if branch == "HEAD" {
-			fmt.Println(ui.ErrorStyle.Styled("❌ can't operate in detached head"))
-			return
-		}
+		s := *decentContext.schedule
 
 		log, err := r.LogWithRevision("-2")
 		if err != nil {
@@ -63,13 +48,6 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 
 		if len(log) == 0 {
 			fmt.Println(ui.ErrorStyle.Styled("❌ git log seems to be empty"))
-			return
-		}
-
-		ops, _ := r.GetSectionOptions("decent")
-		s, err := config.NewScheduleFromMap(ops)
-		if err != nil {
-			Ui.PrintError(err)
 			return
 		}
 
