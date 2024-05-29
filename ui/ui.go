@@ -92,6 +92,45 @@ func (l *UserInterface) PrintSchedule(schedule config.Schedule) {
 	fmt.Printf("📅 %-10s %s\n", time.Sunday.String()+":", s)
 }
 
+func (l *UserInterface) PrintAmend(before time.Time, after time.Time, msg string) {
+	sameDay := after.Day() == before.Day()
+	sameTime := after.Minute() == before.Minute() && after.Hour() == before.Hour()
+
+	fmt.Println("✨", msg)
+	day := before.Format("Mon")
+	if !sameDay {
+		day = AccentStyle.Styled(day)
+	}
+	timeStr := before.Format("15:04")
+	if !sameTime {
+		timeStr = SecondaryStyle.Styled(timeStr)
+	}
+
+	fmt.Printf(
+		"    %s %s %s ",
+		before.Format(time.DateOnly),
+		day,
+		timeStr,
+	)
+	if after == before {
+		fmt.Printf("✅")
+	} else {
+		day := after.Format("Mon")
+		if !sameDay {
+			day = AccentStyle.Styled(day)
+		}
+		time := after.Format("15:04")
+		if !sameTime {
+			time = SecondaryStyle.Styled(time)
+		}
+		fmt.Printf("➡️ %s %s",
+			day,
+			time,
+		)
+	}
+	fmt.Println()
+}
+
 func (l *UserInterface) PrintError(err error) {
 	var commandError *internal.CommandError
 	switch {

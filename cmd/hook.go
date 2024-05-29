@@ -60,44 +60,8 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 			lastDate = &log[0].Date
 		}
 		commit := log[1]
-		commitDate := commit.Date
 		amended := internal.Amend(commit.Date, lastDate, s)
-		sameDay := amended.Day() == commit.Date.Day()
-		sameTime := amended.Minute() == commitDate.Minute() && amended.Hour() == commitDate.Hour()
-
-		fmt.Println("✨", commit.Message)
-		day := commitDate.Format("Mon")
-		if !sameDay {
-			day = ui.AccentStyle.Styled(day)
-		}
-		timeStr := commitDate.Format("15:04")
-		if !sameTime {
-			timeStr = ui.SecondaryStyle.Styled(timeStr)
-		}
-
-		fmt.Printf(
-			"    %s %s %s ",
-			commitDate.Format(time.DateOnly),
-			day,
-			timeStr,
-		)
-		if amended == commit.Date {
-			fmt.Printf("✅")
-		} else {
-			day := amended.Format("Mon")
-			if !sameDay {
-				day = ui.AccentStyle.Styled(day)
-			}
-			time := amended.Format("15:04")
-			if !sameTime {
-				time = ui.SecondaryStyle.Styled(time)
-			}
-			fmt.Printf("➡️ %s %s",
-				day,
-				time,
-			)
-		}
-		fmt.Println()
+		Ui.PrintAmend(commit.Date, amended, commit.Message)
 
 		commit.Date = amended
 

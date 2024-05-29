@@ -61,43 +61,11 @@ maintain appearances while working during unconventional hours...`,
 			}
 			commitDate := commit.Date
 			amended := internal.Amend(commitDate, lastDate, s)
-			sameDay := amended.Day() == commit.Date.Day()
-			sameTime := amended.Minute() == commitDate.Minute() && amended.Hour() == commitDate.Hour()
 
-			fmt.Println("✨", commit.Message)
-			day := commitDate.Format("Mon")
-			if !sameDay {
-				day = ui.AccentStyle.Styled(day)
-			}
-			timeStr := commitDate.Format("15:04")
-			if !sameTime {
-				timeStr = ui.SecondaryStyle.Styled(timeStr)
-			}
-
-			fmt.Printf(
-				"    %s %s %s ",
-				commitDate.Format(time.DateOnly),
-				day,
-				timeStr,
-			)
-			if amended == commit.Date {
-				fmt.Printf("✅")
-			} else {
+			Ui.PrintAmend(commitDate, amended, commit.Message)
+			if amended != commitDate {
 				amendedCount += 1
-				day := amended.Format("Mon")
-				if !sameDay {
-					day = ui.AccentStyle.Styled(day)
-				}
-				time := amended.Format("15:04")
-				if !sameTime {
-					time = ui.SecondaryStyle.Styled(time)
-				}
-				fmt.Printf("➡️ %s %s",
-					day,
-					time,
-				)
 			}
-			fmt.Println()
 
 			commit.Date = amended
 			log[k] = commit
