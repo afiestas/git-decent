@@ -30,26 +30,26 @@ maintain appearances while working during unconventional hours...`,
 		ops, _ := r.GetSectionOptions("decent")
 		s, err := config.NewScheduleFromMap(ops)
 		if err != nil {
-			printError(err)
+			Ui.PrintError(err)
 			return
 		}
 
-		fmt.Println(infoStyle.Styled("Schedule:"))
-		printSchedule(s)
+		Ui.Title("Schedule:")
+		Ui.printSchedule(s)
 		fmt.Println()
 
-		fmt.Println(infoStyle.Styled("Current status"))
+		Ui.Title("Current status")
 		upstream := r.BranchUpstream(r.CurrentBranch())
-		fmt.Println("Upstream branch", secondaryStyle.Styled(upstream))
+		Ui.Info("Upstream branch", upstream)
 
 		aLog := fmt.Sprintf("%s...", upstream)
 		log, err := r.LogWithRevision(aLog)
 		if err != nil {
-			printError(err)
+			Ui.PrintError(err)
 			return
 		}
 
-		fmt.Println("Unpushed commits:", secondaryStyle.Styled(fmt.Sprintf("%d", len(log))))
+		Ui.Info("Unpushed commits:", fmt.Sprintf("%d", len(log)))
 		if len(log) == 0 {
 			return
 		}
@@ -105,14 +105,14 @@ maintain appearances while working during unconventional hours...`,
 			log[k] = commit
 		}
 
-		fmt.Println("Amended commits:", secondaryStyle.Styled(fmt.Sprintf("%d", amendedCount)))
+		Ui.Info("Amended commits:", fmt.Sprintf("%d", amendedCount))
 		if amendedCount == 0 {
 			return
 		}
 
-		answer, err := yesNoQuestion("Do you want to ament the dates?")
+		answer, err := Ui.yesNoQuestion("Do you want to ament the dates?")
 		if err != nil {
-			printError(err)
+			Ui.PrintError(err)
 			return
 		}
 
@@ -123,7 +123,7 @@ maintain appearances while working during unconventional hours...`,
 		err = r.AmendDates(log)
 		if err != nil {
 			fmt.Println("❌", errorStyle.Styled("Error amending the dates"))
-			printError(err)
+			Ui.PrintError(err)
 		}
 	},
 }

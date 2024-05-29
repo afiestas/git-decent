@@ -1,10 +1,8 @@
 package cmd
 
 import (
-	"bufio"
 	"context"
 	_ "embed"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -24,17 +22,6 @@ const decentContextKey contextKey = "decentContext"
 //go:embed config-template.ini
 var configTemplate string
 
-var profile = termenv.ColorProfile()
-var (
-	primaryStyle   = termenv.Style{}.Foreground(termenv.ForegroundColor())
-	secondaryStyle = termenv.Style{}.Foreground(profile.Color("14")).Bold()
-	accentStyle    = termenv.Style{}.Foreground(profile.Color("11")).Bold()
-	successStyle   = termenv.Style{}.Foreground(profile.Color("2")).Bold()
-	warningStyle   = termenv.Style{}.Foreground(profile.Color("3"))
-	errorStyle     = termenv.Style{}.Foreground(profile.Color("9")).Bold()
-	infoStyle      = termenv.Style{}.Foreground(profile.Color("12")).Bold()
-)
-
 type DecentContext struct {
 	restoreConsole func() error
 	gitRepo        *internal.GitRepo
@@ -49,7 +36,7 @@ func commandPreRun(cmd *cobra.Command, args []string) error {
 
 	repo, err := getRepoReady()
 	if err != nil {
-		printError(err)
+		Ui.PrintError(err)
 		return err
 	}
 	if repo == nil {
@@ -87,9 +74,9 @@ func getRepoReady() (*internal.GitRepo, error) {
 	ops, _ := r.GetSectionOptions("decent")
 
 	if len(ops) == 0 {
-		asnwer, err := yesNoQuestion("Git decent is not configured, do you want to do it now?")
+		asnwer, err := Ui.yesNoQuestion("Git decent is not configured, do you want to do it now?")
 		if err != nil {
-			printError(err)
+			Ui.PrintError(err)
 			return nil, err
 		}
 		if !asnwer {
@@ -179,7 +166,7 @@ func openGitEditor() (*config.RawScheduleConfig, error) {
 		}
 
 		fmt.Println("the configuration coudln't be parsed", err)
-		answer, err := yesNoQuestion("Do you want to edit it again?")
+		answer, err := Ui.yesNoQuestion("Do you want to edit it again?")
 		if err != nil {
 			return nil, err
 		}
@@ -207,56 +194,4 @@ func getRepo() (*internal.GitRepo, error) {
 	}
 
 	return r, nil
-}
-
-func yesNoQuestion(question string) (bool, error) {
-	fmt.Println(primaryStyle.Styled(question), primaryStyle.Bold().Styled("(Y/n)"))
-
-	reader := bufio.NewReader(os.Stdin)
-	input, err := reader.ReadString('\n')
-	if err != nil {
-		return false, err
-	}
-
-	input = strings.TrimSpace(input)
-
-	switch strings.ToLower(input) {
-	case "n":
-		return false, nil
-	default:
-		return true, err
-	}
-}
-
-func printSchedule(schedule config.Schedule) {
-	for x := time.Monday; x <= time.Saturday; x++ {
-		s := schedule.Days[x].DecentFrames.String()
-		if len(s) == 0 {
-			s = "↪️ " + schedule.Days[x].ClosestDecentDay.String()
-		}
-		fmt.Printf("📅 %-10s %s\n", x.String()+":", s)
-	}
-	s := schedule.Days[0].DecentFrames.String()
-	if len(s) == 0 {
-		s = "↪️ " + schedule.Days[0].ClosestDecentDay.String()
-	}
-	fmt.Printf("📅 %-10s %s\n", time.Sunday.String()+":", s)
-
-}
-
-func printError(err error) {
-	var commandError *internal.CommandError
-	switch {
-	case errors.As(err, &commandError):
-		fmt.Println("   ", secondaryStyle.Bold().Styled("Command:"), primaryStyle.Styled(commandError.Command))
-		if len(commandError.Stdout) > 0 {
-			fmt.Println("   ", secondaryStyle.Bold().Styled("Stdout:"), primaryStyle.Styled(commandError.Stdout))
-		}
-		if len(commandError.Stderr) > 0 {
-			fmt.Println("   ", secondaryStyle.Bold().Styled("Stderr:"), primaryStyle.Styled(commandError.Stderr))
-		}
-	default:
-		fmt.Println("   ", primaryStyle.Styled(err.Error()))
-	}
-
 }
