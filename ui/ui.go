@@ -108,3 +108,15 @@ func (l *UserInterface) PrintError(err error) {
 	}
 
 }
+
+var restoreConsole func() error
+
+func Setup() error {
+	var err error
+	restoreConsole, err = termenv.EnableVirtualTerminalProcessing(termenv.DefaultOutput())
+	return err
+}
+
+func TearDown() error {
+	return restoreConsole()
+}
