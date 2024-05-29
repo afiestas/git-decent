@@ -30,6 +30,10 @@ var (
 	infoStyle      = termenv.Style{}.Foreground(profile.Color("12")).Bold()
 )
 
+func (l *UserInterface) IsVerbose() bool {
+	return l.verbose
+}
+
 func (l *UserInterface) Info(title string, info string) {
 	fmt.Println(title, secondaryStyle.Styled(info))
 }

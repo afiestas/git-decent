@@ -159,7 +159,7 @@ func TestFixtures(t *testing.T) {
 
 func TestIsGitRepo(t *testing.T) {
 	dir := createTempDir(t, "not-a-repo")
-	repo, err := NewGitRepo(dir)
+	repo, err := NewGitRepo(dir, *dFlag)
 	assert.NoError(t, err)
 
 	assert.False(t, repo.IsGitRepo())

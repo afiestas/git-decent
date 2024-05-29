@@ -24,6 +24,7 @@ const (
 type GitRepo struct {
 	Dir       string
 	configDir string
+	verboe    bool
 }
 
 type Commit struct {
@@ -57,8 +58,8 @@ func (s RepoState) String() string {
 	return [...]string{"clean", "merge", "rebase", "cherry-pick", "bisect"}[s]
 }
 
-func NewGitRepoWithoutGlobalConfig(dir string) (*GitRepo, error) {
-	repo, err := newGitRepo(dir)
+func NewGitRepoWithoutGlobalConfig(dir string, verbose bool) (*GitRepo, error) {
+	repo, err := newGitRepo(dir, verbose)
 	if err != nil {
 		return nil, err
 	}
@@ -66,11 +67,11 @@ func NewGitRepoWithoutGlobalConfig(dir string) (*GitRepo, error) {
 	return repo, err
 }
 
-func NewGitRepo(dir string) (*GitRepo, error) {
-	return newGitRepo(dir)
+func NewGitRepo(dir string, verbose bool) (*GitRepo, error) {
+	return newGitRepo(dir, verbose)
 }
 
-func newGitRepo(dir string) (*GitRepo, error) {
+func newGitRepo(dir string, verbose bool) (*GitRepo, error) {
 	if i, err := os.Stat(dir); err != nil {
 		return nil, fmt.Errorf("couldn't stat directory %w", err)
 	} else if !i.IsDir() {
@@ -78,7 +79,8 @@ func newGitRepo(dir string) (*GitRepo, error) {
 	}
 
 	return &GitRepo{
-		Dir: dir,
+		Dir:    dir,
+		verboe: verbose,
 	}, nil
 }
 
@@ -87,29 +89,47 @@ func (r *GitRepo) commandWithEnv(env []string, arg ...string) (string, error) {
 	cmd := exec.Command(g, arg...)
 	cmd.Dir = r.Dir
 
+	if r.configDir != "" {
+		env = append(env, "GIT_CONFIG_GLOBAL="+r.configDir)
+	}
+
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, env...)
 
-	if r.configDir != "" {
-		cmd.Env = append(cmd.Env, "GIT_CONFIG_GLOBAL="+r.configDir)
+	if r.verboe {
+		fmt.Println(">>>>>> Git Comand")
+		fmt.Println("cmd:", cmd)
+		fmt.Println("env:", env)
 	}
 
 	var stdoutBuf, stderrBuf bytes.Buffer
 	cmd.Stdout = &stdoutBuf
 	cmd.Stderr = &stderrBuf
 
+	var output string
 	err := cmd.Run()
 	if err != nil {
+		if r.verboe {
+			fmt.Println("status: failed", err)
+		}
 		command := cmd.String()
-		return "", &CommandError{
+		err = &CommandError{
 			error:   fmt.Errorf("%s error %s %s %w", command, cmd.Stdout, cmd.Stderr, err),
 			Stdout:  stdoutBuf.String(),
 			Stderr:  stderrBuf.String(),
 			Command: command,
 		}
 
+	} else {
+		output = stdoutBuf.String()
 	}
-	return stdoutBuf.String(), nil
+
+	if r.verboe {
+		fmt.Println("stdout:", stdoutBuf.String())
+		fmt.Println("stderr:", stderrBuf.String())
+		fmt.Println("<<<<<")
+	}
+	return output, err
 }
 
 func (r *GitRepo) command(arg ...string) (string, error) {

@@ -78,7 +78,7 @@ func (rb *RepositoryBuilder) Build() (*GitRepo, error) {
 		rb.dir = dir
 	}
 
-	repo, err := NewGitRepoWithoutGlobalConfig(rb.dir)
+	repo, err := NewGitRepoWithoutGlobalConfig(rb.dir, *dFlag)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't get the GitRpeo %w", err)
 	}

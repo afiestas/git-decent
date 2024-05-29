@@ -29,6 +29,12 @@ type DecentContext struct {
 
 func commandPreRun(cmd *cobra.Command, args []string) error {
 	//windows compatibility
+	verbose, err := cmd.Flags().GetBool("verbose")
+	if err != nil {
+		return fmt.Errorf("error getting the verbose flag %w", err)
+	}
+	Ui.verbose = verbose
+
 	restoreConsole, err := termenv.EnableVirtualTerminalProcessing(termenv.DefaultOutput())
 	if err != nil {
 		panic(err)
@@ -182,7 +188,7 @@ func getRepo() (*internal.GitRepo, error) {
 		fmt.Println("❌", errorStyle.Styled("Couldn't get cwd"), err)
 		return nil, err
 	}
-	r, err := internal.NewGitRepo(cwd)
+	r, err := internal.NewGitRepo(cwd, Ui.verbose)
 	if err != nil {
 		fmt.Println("❌", errorStyle.Styled("Couldn't open the repository"), err)
 		return nil, err

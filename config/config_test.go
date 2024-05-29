@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/afiestas/git-decent/testutils"
 	"github.com/stretchr/testify/assert"
 )
 
