@@ -63,6 +63,9 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 		amended := internal.Amend(commit.Date, lastDate, s)
 		Ui.PrintAmend(commit.Date, amended, commit.Message)
 
+		if commit.Date == amended {
+			return
+		}
 		commit.Date = amended
 
 		err = r.AmendDate(commit)
