@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/afiestas/git-decent/cmd/repo"
+	"github.com/afiestas/git-decent/cmd/security"
 	"github.com/afiestas/git-decent/config"
 	"github.com/afiestas/git-decent/internal"
 	"github.com/afiestas/git-decent/ui"
@@ -27,6 +28,13 @@ func commandPreRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error getting the verbose flag %w", err)
 	}
 	Ui.SetVerbose(verbose)
+
+	err = security.Setup(Ui)
+
+	if err != nil {
+		//TODO: Handle somehow not to show the recurssion prevention
+		return err
+	}
 
 	err = ui.Setup()
 	if err != nil {
@@ -53,4 +61,5 @@ func commandPreRun(cmd *cobra.Command, args []string) error {
 func commandPostRun(cmd *cobra.Command, args []string) {
 	ui.TearDown()
 	repo.TearDown()
+	security.TearDown()
 }

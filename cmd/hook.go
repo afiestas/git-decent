@@ -37,60 +37,6 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 	},
 
 	Run: func(cmd *cobra.Command, args []string) {
-		if os.Getenv("GIT_AMEND_OPERATION") == "1" {
-			if Ui.IsVerbose() {
-				Ui.Error("git-decent should not be a child process of itself")
-			}
-			return
-		}
-		fName := filepath.Join(os.TempDir(), "git-decent-hook-lock-file")
-		f, err := os.OpenFile(fName, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0644)
-
-		if err != nil {
-			fmt.Println(ui.ErrorStyle.Styled("❌ couldn't create lock file"))
-			Ui.PrintError(err)
-			return
-		}
-		err = f.Close()
-		if err != nil {
-			fmt.Println(ui.ErrorStyle.Styled("❌ couldn't close lock file"))
-			Ui.PrintError(err)
-			return
-		}
-
-		cleanup := func() {
-			if f != nil {
-				fmt.Println("Cleaning up")
-				os.Remove(f.Name())
-			}
-		}
-		fmt.Println("Lock file", f.Name())
-		ctx := context.WithValue(cmd.Context(), lockFileKey, f.Name())
-		cmd.SetContext(ctx)
-
-		defer func() {
-			if r := recover(); r != nil {
-				fmt.Printf("Recovered from panic: %v\n", r)
-				cleanup()
-				os.Exit(1)
-			}
-		}()
-
-		sigCh := make(chan os.Signal, 1)
-		signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM, syscall.SIGABRT)
-		go func() {
-			sig := <-sigCh
-			fmt.Printf("Received signal: %s, cleaning up...\n", sig)
-			cleanup()
-			os.Exit(1)
-		}()
-
-		// err = commandPreRun(cmd, args)
-		// if err != nil {
-		// 	Ui.PrintError(err)
-		// 	return
-		// }
-
 		decentContext, ok := cmd.Context().Value(decentContextKey).(*DecentContext)
 		if !ok {
 			return

@@ -2,6 +2,7 @@ package repo
 
 import (
 	_ "embed"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -165,6 +166,15 @@ func getRepo() (*internal.GitRepo, error) {
 	if !r.IsGitRepo() {
 		err = fmt.Errorf(fmt.Sprintf("the directory %s is not a git repository", cwd))
 		return nil, err
+	}
+
+	if state := r.State(); state != internal.Clean {
+		return nil, fmt.Errorf("can't operate while %s is in progress", state)
+	}
+
+	branch := r.CurrentBranch()
+	if branch == "HEAD" {
+		return nil, errors.New("can't operate in detached head")
 	}
 
 	return r, nil
