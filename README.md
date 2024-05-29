@@ -60,11 +60,11 @@ signed.
     - go git ✅
     - parse days ✅
     - ranges ✅
--  Create default config if not cofigured
-    - Show table
--  Calcualte new date
-    - Based on latest commit date
-    - Based on configured ranges
+-  Create default config if not cofigured ✅
+    - Show table ✅
+-  Calcualte new date ✅
+    - Based on latest commit date ✅
+    - Based on configured ranges ✅
     - Allocation logic
         - Natural flow
             - Will start counting from last commit if last commit was done within range
