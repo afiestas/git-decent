@@ -1,4 +1,4 @@
-package cmd
+package ui
 
 import (
 	"bufio"
@@ -21,29 +21,33 @@ var Ui UserInterface
 
 var profile = termenv.ColorProfile()
 var (
-	primaryStyle   = termenv.Style{}.Foreground(termenv.ForegroundColor())
-	secondaryStyle = termenv.Style{}.Foreground(profile.Color("14")).Bold()
-	accentStyle    = termenv.Style{}.Foreground(profile.Color("11")).Bold()
+	PrimaryStyle   = termenv.Style{}.Foreground(termenv.ForegroundColor())
+	SecondaryStyle = termenv.Style{}.Foreground(profile.Color("14")).Bold()
+	AccentStyle    = termenv.Style{}.Foreground(profile.Color("11")).Bold()
 	successStyle   = termenv.Style{}.Foreground(profile.Color("2")).Bold()
 	warningStyle   = termenv.Style{}.Foreground(profile.Color("3"))
-	errorStyle     = termenv.Style{}.Foreground(profile.Color("9")).Bold()
-	infoStyle      = termenv.Style{}.Foreground(profile.Color("12")).Bold()
+	ErrorStyle     = termenv.Style{}.Foreground(profile.Color("9")).Bold()
+	InfoStyle      = termenv.Style{}.Foreground(profile.Color("12")).Bold()
 )
 
 func (l *UserInterface) IsVerbose() bool {
 	return l.verbose
 }
 
+func (l *UserInterface) SetVerbose(verbose bool) {
+	l.verbose = verbose
+}
+
 func (l *UserInterface) Info(title string, info string) {
-	fmt.Println(title, secondaryStyle.Styled(info))
+	fmt.Println(title, SecondaryStyle.Styled(info))
 }
 
 func (l *UserInterface) Title(str string) {
-	fmt.Println(infoStyle.Styled(str))
+	fmt.Println(InfoStyle.Styled(str))
 }
 
 func (l *UserInterface) Error(str string) {
-	fmt.Println("❌", errorStyle.Styled(str))
+	fmt.Println("❌", ErrorStyle.Styled(str))
 }
 
 func (l *UserInterface) Debug(str string) {
@@ -54,8 +58,8 @@ func (l *UserInterface) Debug(str string) {
 	fmt.Println(str)
 }
 
-func (l *UserInterface) yesNoQuestion(question string) (bool, error) {
-	fmt.Println(primaryStyle.Styled(question), primaryStyle.Bold().Styled("(Y/n)"))
+func (l *UserInterface) YesNoQuestion(question string) (bool, error) {
+	fmt.Println(PrimaryStyle.Styled(question), PrimaryStyle.Bold().Styled("(Y/n)"))
 
 	reader := bufio.NewReader(os.Stdin)
 	input, err := reader.ReadString('\n')
@@ -73,7 +77,7 @@ func (l *UserInterface) yesNoQuestion(question string) (bool, error) {
 	}
 }
 
-func (l *UserInterface) printSchedule(schedule config.Schedule) {
+func (l *UserInterface) PrintSchedule(schedule config.Schedule) {
 	for x := time.Monday; x <= time.Saturday; x++ {
 		s := schedule.Days[x].DecentFrames.String()
 		if len(s) == 0 {
@@ -92,15 +96,15 @@ func (l *UserInterface) PrintError(err error) {
 	var commandError *internal.CommandError
 	switch {
 	case errors.As(err, &commandError):
-		fmt.Println("   ", secondaryStyle.Bold().Styled("Command:"), primaryStyle.Styled(commandError.Command))
+		fmt.Println("   ", SecondaryStyle.Bold().Styled("Command:"), PrimaryStyle.Styled(commandError.Command))
 		if len(commandError.Stdout) > 0 {
-			fmt.Println("   ", secondaryStyle.Bold().Styled("Stdout:"), primaryStyle.Styled(commandError.Stdout))
+			fmt.Println("   ", SecondaryStyle.Bold().Styled("Stdout:"), PrimaryStyle.Styled(commandError.Stdout))
 		}
 		if len(commandError.Stderr) > 0 {
-			fmt.Println("   ", secondaryStyle.Bold().Styled("Stderr:"), primaryStyle.Styled(commandError.Stderr))
+			fmt.Println("   ", SecondaryStyle.Bold().Styled("Stderr:"), PrimaryStyle.Styled(commandError.Stderr))
 		}
 	default:
-		fmt.Println("   ", primaryStyle.Styled(err.Error()))
+		fmt.Println("   ", PrimaryStyle.Styled(err.Error()))
 	}
 
 }

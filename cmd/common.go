@@ -11,6 +11,7 @@ import (
 
 	"github.com/afiestas/git-decent/config"
 	"github.com/afiestas/git-decent/internal"
+	"github.com/afiestas/git-decent/ui"
 	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
 )
@@ -28,12 +29,11 @@ type DecentContext struct {
 }
 
 func commandPreRun(cmd *cobra.Command, args []string) error {
-	//windows compatibility
 	verbose, err := cmd.Flags().GetBool("verbose")
 	if err != nil {
 		return fmt.Errorf("error getting the verbose flag %w", err)
 	}
-	Ui.verbose = verbose
+	Ui.SetVerbose(verbose)
 
 	restoreConsole, err := termenv.EnableVirtualTerminalProcessing(termenv.DefaultOutput())
 	if err != nil {
@@ -45,13 +45,14 @@ func commandPreRun(cmd *cobra.Command, args []string) error {
 		Ui.PrintError(err)
 		return err
 	}
+
 	if repo == nil {
 		return fmt.Errorf("unable to configure the repository")
 	}
 
 	_, err = repo.LogWithRevision("-1")
 	if err != nil {
-		return fmt.Errorf(errorStyle.Styled("❌ No commits found"))
+		return fmt.Errorf(ui.ErrorStyle.Styled("❌ No commits found"))
 	}
 
 	decentContext := &DecentContext{
@@ -80,7 +81,7 @@ func getRepoReady() (*internal.GitRepo, error) {
 	ops, _ := r.GetSectionOptions("decent")
 
 	if len(ops) == 0 {
-		asnwer, err := Ui.yesNoQuestion("Git decent is not configured, do you want to do it now?")
+		asnwer, err := Ui.YesNoQuestion("Git decent is not configured, do you want to do it now?")
 		if err != nil {
 			Ui.PrintError(err)
 			return nil, err
@@ -172,7 +173,7 @@ func openGitEditor() (*config.RawScheduleConfig, error) {
 		}
 
 		fmt.Println("the configuration coudln't be parsed", err)
-		answer, err := Ui.yesNoQuestion("Do you want to edit it again?")
+		answer, err := Ui.YesNoQuestion("Do you want to edit it again?")
 		if err != nil {
 			return nil, err
 		}
@@ -185,17 +186,17 @@ func openGitEditor() (*config.RawScheduleConfig, error) {
 func getRepo() (*internal.GitRepo, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
-		fmt.Println("❌", errorStyle.Styled("Couldn't get cwd"), err)
+		fmt.Println("❌", ui.ErrorStyle.Styled("Couldn't get cwd"), err)
 		return nil, err
 	}
-	r, err := internal.NewGitRepo(cwd, Ui.verbose)
+	r, err := internal.NewGitRepo(cwd, Ui.IsVerbose())
 	if err != nil {
-		fmt.Println("❌", errorStyle.Styled("Couldn't open the repository"), err)
+		fmt.Println("❌", ui.ErrorStyle.Styled("Couldn't open the repository"), err)
 		return nil, err
 	}
 	if !r.IsGitRepo() {
-		fmt.Println(errorStyle.Styled("❌ Not a git repository"))
-		fmt.Println("The directory", secondaryStyle.Styled(cwd), "does not appear to be a git repo")
+		fmt.Println(ui.ErrorStyle.Styled("❌ Not a git repository"))
+		fmt.Println("The directory", ui.SecondaryStyle.Styled(cwd), "does not appear to be a git repo")
 		return nil, err
 	}
 

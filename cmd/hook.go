@@ -11,6 +11,7 @@ import (
 
 	"github.com/afiestas/git-decent/config"
 	"github.com/afiestas/git-decent/internal"
+	"github.com/afiestas/git-decent/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -37,7 +38,7 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 
 	Run: func(cmd *cobra.Command, args []string) {
 		if os.Getenv("GIT_AMEND_OPERATION") == "1" {
-			if Ui.verbose {
+			if Ui.IsVerbose() {
 				Ui.Error("git-decent should not be a child process of itself")
 			}
 			return
@@ -46,13 +47,13 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 		f, err := os.OpenFile(fName, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0644)
 
 		if err != nil {
-			fmt.Println(errorStyle.Styled("❌ couldn't create lock file"))
+			fmt.Println(ui.ErrorStyle.Styled("❌ couldn't create lock file"))
 			Ui.PrintError(err)
 			return
 		}
 		err = f.Close()
 		if err != nil {
-			fmt.Println(errorStyle.Styled("❌ couldn't close lock file"))
+			fmt.Println(ui.ErrorStyle.Styled("❌ couldn't close lock file"))
 			Ui.PrintError(err)
 			return
 		}
@@ -84,11 +85,11 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 			os.Exit(1)
 		}()
 
-		err = commandPreRun(cmd, args)
-		if err != nil {
-			Ui.PrintError(err)
-			return
-		}
+		// err = commandPreRun(cmd, args)
+		// if err != nil {
+		// 	Ui.PrintError(err)
+		// 	return
+		// }
 
 		decentContext, ok := cmd.Context().Value(decentContextKey).(*DecentContext)
 		if !ok {
@@ -97,25 +98,25 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 		r := decentContext.gitRepo
 
 		if state := r.State(); state != internal.Clean {
-			fmt.Println(errorStyle.Styled(fmt.Sprintf("❌ can't operate while %s is in progress", state)))
+			fmt.Println(ui.ErrorStyle.Styled(fmt.Sprintf("❌ can't operate while %s is in progress", state)))
 			return
 		}
 
 		branch := r.CurrentBranch()
 		if branch == "HEAD" {
-			fmt.Println(errorStyle.Styled("❌ can't operate in detached head"))
+			fmt.Println(ui.ErrorStyle.Styled("❌ can't operate in detached head"))
 			return
 		}
 
 		log, err := r.LogWithRevision("-2")
 		if err != nil {
-			fmt.Println(errorStyle.Styled("❌ couldn't get log from repo"))
+			fmt.Println(ui.ErrorStyle.Styled("❌ couldn't get log from repo"))
 			Ui.PrintError(err)
 			return
 		}
 
 		if len(log) == 0 {
-			fmt.Println(errorStyle.Styled("❌ git log seems to be empty"))
+			fmt.Println(ui.ErrorStyle.Styled("❌ git log seems to be empty"))
 			return
 		}
 
@@ -126,8 +127,8 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 			return
 		}
 
-		fmt.Println(infoStyle.Styled("Schedule:"))
-		Ui.printSchedule(s)
+		fmt.Println(ui.InfoStyle.Styled("Schedule:"))
+		Ui.PrintSchedule(s)
 		fmt.Println()
 
 		var lastDate *time.Time = nil
@@ -143,11 +144,11 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 		fmt.Println("✨", commit.Message)
 		day := commitDate.Format("Mon")
 		if !sameDay {
-			day = accentStyle.Styled(day)
+			day = ui.AccentStyle.Styled(day)
 		}
 		timeStr := commitDate.Format("15:04")
 		if !sameTime {
-			timeStr = secondaryStyle.Styled(timeStr)
+			timeStr = ui.SecondaryStyle.Styled(timeStr)
 		}
 
 		fmt.Printf(
@@ -161,11 +162,11 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 		} else {
 			day := amended.Format("Mon")
 			if !sameDay {
-				day = accentStyle.Styled(day)
+				day = ui.AccentStyle.Styled(day)
 			}
 			time := amended.Format("15:04")
 			if !sameTime {
-				time = secondaryStyle.Styled(time)
+				time = ui.SecondaryStyle.Styled(time)
 			}
 			fmt.Printf("➡️ %s %s",
 				day,
@@ -178,7 +179,7 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 
 		err = r.AmendDate(commit)
 		if err != nil {
-			fmt.Println(errorStyle.Styled("❌ error while amending the date"))
+			fmt.Println(ui.ErrorStyle.Styled("❌ error while amending the date"))
 			Ui.PrintError(err)
 			return
 		}
