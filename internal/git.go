@@ -89,6 +89,7 @@ func (r *GitRepo) commandWithEnv(env []string, arg ...string) (string, error) {
 	cmd := exec.Command(g, arg...)
 	cmd.Dir = r.Dir
 
+	env = append(env, "GIT_AMEND_OPERATION=1")
 	if r.configDir != "" {
 		env = append(env, "GIT_CONFIG_GLOBAL="+r.configDir)
 	}

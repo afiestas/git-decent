@@ -36,6 +36,12 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 	},
 
 	Run: func(cmd *cobra.Command, args []string) {
+		if os.Getenv("GIT_AMEND_OPERATION") == "1" {
+			if Ui.verbose {
+				Ui.Error("git-decent should not be a child process of itself")
+			}
+			return
+		}
 		fName := filepath.Join(os.TempDir(), "git-decent-hook-lock-file")
 		f, err := os.OpenFile(fName, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0644)
 
