@@ -143,8 +143,8 @@ func TestFixtures(t *testing.T) {
 
 	t.Run("Log with commits with date", func(t *testing.T) {
 		historyDates := []time.Time{
-			time.Date(2022, 1, 1, 1, 0, 0, 0, time.Now().UTC().Location()),
-			time.Date(2022, 1, 1, 2, 0, 0, 0, time.Now().UTC().Location()),
+			time.Date(2022, 1, 1, 1, 0, 0, 0, time.FixedZone("", 0)),
+			time.Date(2022, 1, 1, 2, 0, 0, 0, time.FixedZone("", 0)),
 		}
 		repo, err := NewRepositoryBuilder(t).As(Working).WithCommitsWithDates(historyDates).Build()
 		require.NoError(t, err)
@@ -152,8 +152,8 @@ func TestFixtures(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Len(t, log, 2)
 
-		assert.Equal(t, log[0].Date, historyDates[0])
-		assert.Equal(t, log[1].Date, historyDates[1])
+		assert.Equal(t, historyDates[0], log[0].Date)
+		assert.Equal(t, historyDates[1], log[1].Date)
 	})
 }
 

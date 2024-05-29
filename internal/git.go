@@ -444,7 +444,7 @@ func parseLog(output string) (GitLog, error) {
 			fmt.Println("[WARN]: couldn't parse date from commit log")
 		}
 
-		commit.Date = date.UTC()
+		commit.Date = date
 
 		pFiles := strings.Split(files, "\n")
 		for _, pFile := range pFiles {

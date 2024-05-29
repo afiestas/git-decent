@@ -197,7 +197,7 @@ func NewFixtureCommit(repo *GitRepo) (*Commit, error) {
 	}
 	return &Commit{
 		Message: fmt.Sprintf("Some commit message for %s and %s", fname, fname2),
-		Date:    time.Date(2000, 12, 20, 1, 2, 3, 4, time.UTC),
+		Date:    time.Date(2000, 12, 20, 1, 2, 3, 4, time.FixedZone("", 2*60*60)),
 		Author:  "Git test <test@git-decent.git>",
 		Files:   []string{fname, fname2},
 	}, nil

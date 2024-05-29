@@ -56,8 +56,7 @@ func makeFixtures(t *testing.T, initial []string, amended []string) amendFixture
 	}
 
 	parseDate := func(dateStr string, t *testing.T) time.Time {
-		layout := "2006-01-02 15:04:05"
-		pTime, err := time.Parse(layout, dateStr)
+		pTime, err := time.Parse(time.RFC1123Z, dateStr)
 		assert.NoError(t, err)
 
 		return pTime
@@ -80,40 +79,40 @@ var tests = []struct {
 }{
 	{
 		name:    "Amend Single Undecent Commit",
-		initial: []string{"2024-01-28 18:30:00"},
-		amended: []string{"2024-01-29 09:00:00"},
+		initial: []string{"Sun, 28 Jan 2024 18:30:00 +0200"},
+		amended: []string{"Mon, 29 Jan 2024 09:00:00 +0200"},
 		decentSlots: map[time.Weekday]string{
 			time.Monday: "09:00/17:00",
 		},
 	},
 	{
 		name:    "Amend Two Close Undecent Commits",
-		initial: []string{"2024-01-28 18:30:00", "2024-01-28 18:35:00"},
-		amended: []string{"2024-01-29 09:00:00", "2024-01-29 09:05:00"},
+		initial: []string{"Sun, 28 Jan 2024 18:30:00 +0200", "Sun, 28 Jan 2024 18:35:00 +0200"},
+		amended: []string{"Mon, 29 Jan 2024 09:00:00 +0200", "Mon, 29 Jan 2024 09:05:00 +0200"},
 		decentSlots: map[time.Weekday]string{
 			time.Monday: "09:00/17:00",
 		},
 	},
 	{
 		name:    "Amend Compression Undecent Commits",
-		initial: []string{"2024-01-28 18:30:00", "2024-01-28 23:59:00"},
-		amended: []string{"2024-01-29 09:00:00", "2024-01-29 09:09:00"},
+		initial: []string{"Sun, 28 Jan 2024 18:30:00 +0200", "Sun, 28 Jan 2024 23:59:00 +0200"},
+		amended: []string{"Mon, 29 Jan 2024 09:00:00 +0200", "Mon, 29 Jan 2024 09:09:00 +0200"},
 		decentSlots: map[time.Weekday]string{
 			time.Monday: "09:00/17:00",
 		},
 	},
 	{
 		name:    "Amend Commit In Amended Range",
-		initial: []string{"2024-01-28 18:30:00", "2024-01-28 23:59:00", "2024-01-29 09:00:00"},
-		amended: []string{"2024-01-29 09:00:00", "2024-01-29 09:09:00", "2024-01-29 09:14:00"},
+		initial: []string{"Sun, 28 Jan 2024 18:30:00 +0200", "Sun, 28 Jan 2024 23:59:00 +0200", "Mon, 29 Jan 2024 09:00:00 +0200"},
+		amended: []string{"Mon, 29 Jan 2024 09:00:00 +0200", "Mon, 29 Jan 2024 09:09:00 +0200", "Mon, 29 Jan 2024 09:14:00 +0200"},
 		decentSlots: map[time.Weekday]string{
 			time.Monday: "09:00/17:00",
 		},
 	},
 	{
 		name:    "Amend Overflow",
-		initial: []string{"2024-01-29 17:00:00", "2024-01-29 16:55:00", "2024-01-29 17:50:00", "2024-01-29 20:51:00"},
-		amended: []string{"2024-01-29 17:00:00", "2024-01-29 18:05:00", "2024-01-29 18:10:00", "2024-01-30 09:01:00"},
+		initial: []string{"Mon, 29 Jan 2024 17:00:00 +0200", "Mon, 29 Jan 2024 16:55:00 +0200", "Mon, 29 Jan 2024 17:50:00 +0200", "Mon, 29 Jan 2024 20:51:00 +0200"},
+		amended: []string{"Mon, 29 Jan 2024 17:00:00 +0200", "Mon, 29 Jan 2024 18:05:00 +0200", "Mon, 29 Jan 2024 18:10:00 +0200", "Tue, 30 Jan 2024 09:01:00 +0200"},
 		decentSlots: map[time.Weekday]string{
 			time.Monday:  "09:00/17:00, 18:00/19:00",
 			time.Tuesday: "09:00/17:00",
