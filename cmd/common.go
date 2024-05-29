@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	_ "embed"
 	"fmt"
 
 	"github.com/afiestas/git-decent/cmd/repo"
