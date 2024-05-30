@@ -22,7 +22,8 @@ maintain appearances while working during unconventional hours...`,
 	PersistentPreRunE: commandPreRun,
 	PersistentPostRun: commandPostRun,
 
-	SilenceUsage: true,
+	SilenceUsage:  true,
+	SilenceErrors: true,
 
 	Run: func(cmd *cobra.Command, args []string) {
 		decentContext, ok := cmd.Context().Value(decentContextKey).(*DecentContext)

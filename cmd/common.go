@@ -42,7 +42,6 @@ func commandPreRun(cmd *cobra.Command, args []string) error {
 
 	repo, schedule, err := repo.Setup(Ui)
 	if err != nil {
-		Ui.PrintError(err)
 		return err
 	}
 
