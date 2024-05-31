@@ -8,18 +8,18 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/afiestas/git-decent/ui"
+	u "github.com/afiestas/git-decent/utils"
 )
 
 var cleanup func()
 
-func Setup(ui ui.UserInterface) error {
+func Setup() error {
 	err := recursivePreventionEnv()
 	if err != nil {
 		return err
 	}
 
-	err = recursivePreventLockfile(ui)
+	err = recursivePreventLockfile()
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func recursivePreventionEnv() error {
 	return nil
 }
 
-func recursivePreventLockfile(ui ui.UserInterface) error {
+func recursivePreventLockfile() error {
 	fName := filepath.Join(os.TempDir(), "git-decent-hook-lock-file")
 	f, err := os.OpenFile(fName, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0644)
 
@@ -55,18 +55,16 @@ func recursivePreventLockfile(ui ui.UserInterface) error {
 
 	cleanup = func() {
 		if f != nil {
-			fmt.Println("Cleaning up")
+			u.Debug("Cleaning up")
 			os.Remove(f.Name())
 		}
 	}
 
-	if ui.IsVerbose() {
-		fmt.Println("Lock file", f.Name())
-	}
+	u.Debug("Lock file:", f.Name())
 
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Printf("Recovered from panic: %v\n", r)
+			u.Debug(fmt.Sprintf("Recovered from panic: %v\n", r))
 			cleanup()
 			os.Exit(1)
 		}
@@ -76,9 +74,7 @@ func recursivePreventLockfile(ui ui.UserInterface) error {
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM, syscall.SIGABRT)
 	go func() {
 		sig := <-sigCh
-		if ui.IsVerbose() {
-			fmt.Printf("Received signal: %s, cleaning up...\n", sig)
-		}
+		u.Debug(fmt.Sprintf("Received signal: %s, cleaning up...\n", sig))
 
 		cleanup()
 		os.Exit(1)

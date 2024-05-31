@@ -11,8 +11,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var Ui ui.UserInterface
-
 var rootCmd = &cobra.Command{
 	Use:   "git-decent",
 	Short: "Ammends your commits so it looks like you are behaving",
@@ -20,7 +18,6 @@ var rootCmd = &cobra.Command{
 maintain appearances while working during unconventional hours...`,
 
 	PersistentPreRunE: commandPreRun,
-	PersistentPostRun: commandPostRun,
 
 	SilenceUsage:  true,
 	SilenceErrors: true,
@@ -33,22 +30,22 @@ maintain appearances while working during unconventional hours...`,
 		r := decentContext.gitRepo
 		s := *decentContext.schedule
 
-		Ui.Title("Schedule:")
-		Ui.PrintSchedule(s)
+		ui.Title("Schedule:")
+		ui.PrintSchedule(s)
 		fmt.Println()
 
-		Ui.Title("Current status")
+		ui.Title("Current status")
 		upstream := r.BranchUpstream(r.CurrentBranch())
-		Ui.Info("Upstream branch", upstream)
+		ui.Info("Upstream branch", upstream)
 
 		aLog := fmt.Sprintf("%s...", upstream)
 		log, err := r.LogWithRevision(aLog)
 		if err != nil {
-			Ui.PrintError(err)
+			ui.PrintError(err)
 			return
 		}
 
-		Ui.Info("Unpushed commits:", fmt.Sprintf("%d", len(log)))
+		ui.Info("Unpushed commits:", fmt.Sprintf("%d", len(log)))
 		if len(log) == 0 {
 			return
 		}
@@ -63,7 +60,7 @@ maintain appearances while working during unconventional hours...`,
 			commitDate := commit.Date
 			amended := internal.Amend(commitDate, lastDate, s)
 
-			Ui.PrintAmend(commitDate, amended, commit.Message)
+			ui.PrintAmend(commitDate, amended, commit.Message)
 			if amended != commitDate {
 				amendedCount += 1
 			}
@@ -72,14 +69,14 @@ maintain appearances while working during unconventional hours...`,
 			log[k] = commit
 		}
 
-		Ui.Info("Amended commits:", fmt.Sprintf("%d", amendedCount))
+		ui.Info("Amended commits:", fmt.Sprintf("%d", amendedCount))
 		if amendedCount == 0 {
 			return
 		}
 
-		answer, err := Ui.YesNoQuestion("Do you want to ament the dates?")
+		answer, err := ui.YesNoQuestion("Do you want to ament the dates?")
 		if err != nil {
-			Ui.PrintError(err)
+			ui.PrintError(err)
 			return
 		}
 
@@ -90,7 +87,7 @@ maintain appearances while working during unconventional hours...`,
 		err = r.AmendDates(log)
 		if err != nil {
 			fmt.Println("❌", ui.ErrorStyle.Styled("Error amending the dates"))
-			Ui.PrintError(err)
+			ui.PrintError(err)
 		}
 	},
 }
@@ -99,8 +96,10 @@ func Execute() {
 	rootCmd.AddCommand(hookCmd)
 	rootCmd.AddCommand(installCdm)
 	err := rootCmd.Execute()
+	commandPostRun()
+
 	if err != nil {
-		Ui.PrintError(err)
+		ui.PrintError(err)
 		os.Exit(1)
 	}
 

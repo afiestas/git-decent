@@ -12,22 +12,21 @@ import (
 	"github.com/afiestas/git-decent/config"
 	"github.com/afiestas/git-decent/internal"
 	"github.com/afiestas/git-decent/ui"
+	u "github.com/afiestas/git-decent/utils"
 )
 
 //go:embed config-template.ini
 var configTemplate string
-var Ui ui.UserInterface
 
-func Setup(ui ui.UserInterface) (*internal.GitRepo, *config.Schedule, error) {
-	Ui = ui
+func Setup() (*internal.GitRepo, *config.Schedule, error) {
 	repo, err := getRepo()
 	if err != nil {
-		return nil, nil, fmt.Errorf("couldn't setup the repository %w", err)
+		return nil, nil, u.WrapE("couldn't setup the repository", err)
 	}
 
 	_, err = repo.LogWithRevision("-1")
 	if err != nil {
-		return nil, nil, fmt.Errorf("coudlnt' get the git log %w", err)
+		return nil, nil, u.WrapE("couldn't get the git log", err)
 	}
 
 	schedule, err := getSchedule(repo)
@@ -46,7 +45,7 @@ func getSchedule(r *internal.GitRepo) (*config.Schedule, error) {
 	ops, _ := r.GetSectionOptions("decent")
 
 	if len(ops) == 0 {
-		asnwer, err := Ui.YesNoQuestion("Git decent is not configured, do you want to do it now?")
+		asnwer, err := ui.YesNoQuestion("Git decent is not configured, do you want to do it now?")
 		if err != nil {
 			return nil, err
 		}
@@ -142,7 +141,7 @@ func openGitEditor() (*config.RawScheduleConfig, error) {
 		}
 
 		fmt.Println("the configuration coudln't be parsed", err)
-		answer, err := Ui.YesNoQuestion("Do you want to edit it again?")
+		answer, err := ui.YesNoQuestion("Do you want to edit it again?")
 		if err != nil {
 			return nil, err
 		}
@@ -158,7 +157,7 @@ func getRepo() (*internal.GitRepo, error) {
 		return nil, fmt.Errorf("couldn't getRepo %w", err)
 	}
 
-	r, err := internal.NewGitRepo(cwd, Ui.IsVerbose())
+	r, err := internal.NewGitRepo(cwd, ui.IsVerbose())
 	if err != nil {
 		return nil, fmt.Errorf("couldn't open the repository: %w", err)
 	}

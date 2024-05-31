@@ -26,9 +26,9 @@ func commandPreRun(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("error getting the verbose flag %w", err)
 	}
-	Ui.SetVerbose(verbose)
+	ui.SetVerbose(verbose)
 
-	err = security.Setup(Ui)
+	err = security.Setup()
 
 	if err != nil {
 		//TODO: Handle somehow not to show the recurssion prevention
@@ -40,7 +40,7 @@ func commandPreRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("couldn't setup the ui %w", err)
 	}
 
-	repo, schedule, err := repo.Setup(Ui)
+	repo, schedule, err := repo.Setup()
 	if err != nil {
 		return err
 	}
@@ -56,7 +56,7 @@ func commandPreRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func commandPostRun(cmd *cobra.Command, args []string) {
+func commandPostRun() {
 	ui.TearDown()
 	repo.TearDown()
 	security.TearDown()

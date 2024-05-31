@@ -9,6 +9,9 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/afiestas/git-decent/ui"
+	"github.com/afiestas/git-decent/utils"
 )
 
 const g string = "git"
@@ -42,6 +45,16 @@ type CommandError struct {
 	Command string
 	Stdout  string
 	Stderr  string
+}
+
+func (e *CommandError) PrettyPrint() {
+	fmt.Println("   ", ui.SecondaryStyle.Bold().Styled("Command:"), ui.PrimaryStyle.Styled(e.Command))
+	if len(e.Stdout) > 0 {
+		fmt.Println("   ", ui.SecondaryStyle.Bold().Styled("Stdout:"), ui.PrimaryStyle.Styled(e.Stdout))
+	}
+	if len(e.Stderr) > 0 {
+		fmt.Println("   ", ui.SecondaryStyle.Bold().Styled("Stderr:"), ui.PrimaryStyle.Styled(e.Stderr))
+	}
 }
 
 type RepoState int
@@ -88,20 +101,18 @@ func (r *GitRepo) commandWithEnv(env []string, arg ...string) (string, error) {
 
 	cmd := exec.Command(g, arg...)
 	cmd.Dir = r.Dir
+	db := utils.DebugBlock{Title: fmt.Sprintf("⚙️ %s", cmd.String())}
+	db.AddLine("Cmd", cmd.String())
 
 	env = append(env, "GIT_AMEND_OPERATION=1")
 	if r.configDir != "" {
 		env = append(env, "GIT_CONFIG_GLOBAL="+r.configDir)
 	}
 
+	db.AddLine("Env:", env...)
 	cmd.Env = os.Environ()
-	cmd.Env = append(cmd.Env, env...)
 
-	if r.verboe {
-		fmt.Println(">>>>>> Git Comand")
-		fmt.Println("cmd:", cmd)
-		fmt.Println("env:", env)
-	}
+	cmd.Env = append(cmd.Env, env...)
 
 	var stdoutBuf, stderrBuf bytes.Buffer
 	cmd.Stdout = &stdoutBuf
@@ -109,10 +120,11 @@ func (r *GitRepo) commandWithEnv(env []string, arg ...string) (string, error) {
 
 	var output string
 	err := cmd.Run()
+	db.AddLine("Stdout", stdoutBuf.String())
+	db.AddLine("Stderr", stderrBuf.String())
+
 	if err != nil {
-		if r.verboe {
-			fmt.Println("status: failed", err)
-		}
+		db.AddLine("Status", "❌")
 		command := cmd.String()
 		err = &CommandError{
 			error:   fmt.Errorf("%s error %s %s %w", command, cmd.Stdout, cmd.Stderr, err),
@@ -122,14 +134,11 @@ func (r *GitRepo) commandWithEnv(env []string, arg ...string) (string, error) {
 		}
 
 	} else {
+		db.AddLine("Status", "✅")
 		output = stdoutBuf.String()
 	}
+	db.Print()
 
-	if r.verboe {
-		fmt.Println("stdout:", stdoutBuf.String())
-		fmt.Println("stderr:", stderrBuf.String())
-		fmt.Println("<<<<<")
-	}
 	return output, err
 }
 
@@ -413,7 +422,7 @@ func (r *GitRepo) log(args ...string) (GitLog, error) {
 	params = append(params, args...)
 	output, err := r.command(params...)
 	if err != nil {
-		return make(GitLog, 0), fmt.Errorf("couldn't execute git log %w", err)
+		return make(GitLog, 0), err
 	}
 
 	return parseLog(output)

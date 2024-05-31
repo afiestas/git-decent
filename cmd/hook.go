@@ -42,7 +42,7 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 		log, err := r.LogWithRevision("-2")
 		if err != nil {
 			fmt.Println(ui.ErrorStyle.Styled("❌ couldn't get log from repo"))
-			Ui.PrintError(err)
+			ui.PrintError(err)
 			return
 		}
 
@@ -52,7 +52,7 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 		}
 
 		fmt.Println(ui.InfoStyle.Styled("Schedule:"))
-		Ui.PrintSchedule(s)
+		ui.PrintSchedule(s)
 		fmt.Println()
 
 		var lastDate *time.Time = nil
@@ -61,7 +61,7 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 		}
 		commit := log[1]
 		amended := internal.Amend(commit.Date, lastDate, s)
-		Ui.PrintAmend(commit.Date, amended, commit.Message)
+		ui.PrintAmend(commit.Date, amended, commit.Message)
 
 		if commit.Date == amended {
 			return
@@ -71,7 +71,7 @@ This hook command adds a file semaphore to prevent the infinite loop from happen
 		err = r.AmendDate(commit)
 		if err != nil {
 			fmt.Println(ui.ErrorStyle.Styled("❌ error while amending the date"))
-			Ui.PrintError(err)
+			ui.PrintError(err)
 			return
 		}
 	},

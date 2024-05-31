@@ -2,22 +2,20 @@ package ui
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/afiestas/git-decent/config"
-	"github.com/afiestas/git-decent/internal"
 	"github.com/muesli/termenv"
 )
 
-type UserInterface struct {
-	verbose bool
+type PrettyPrinter interface {
+	PrettyPrint()
 }
 
-var Ui UserInterface
+var verbose bool
 
 var profile = termenv.ColorProfile()
 var (
@@ -28,37 +26,42 @@ var (
 	warningStyle   = termenv.Style{}.Foreground(profile.Color("3"))
 	ErrorStyle     = termenv.Style{}.Foreground(profile.Color("9")).Bold()
 	InfoStyle      = termenv.Style{}.Foreground(profile.Color("12")).Bold()
+	DebugStyle     = termenv.Style{}.Foreground(profile.Color("8"))
 )
 
-func (l *UserInterface) IsVerbose() bool {
-	return l.verbose
+func SetVerbose(enabled bool) {
+	verbose = enabled
 }
 
-func (l *UserInterface) SetVerbose(verbose bool) {
-	l.verbose = verbose
+func IsVerbose() bool {
+	return verbose
 }
 
-func (l *UserInterface) Info(title string, info string) {
+func Info(title string, info string) {
 	fmt.Println(title, SecondaryStyle.Styled(info))
 }
 
-func (l *UserInterface) Title(str string) {
+func Title(str string) {
 	fmt.Println(InfoStyle.Styled(str))
 }
 
-func (l *UserInterface) Error(str string) {
+func Error(str string) {
 	fmt.Println("❌", ErrorStyle.Styled(str))
 }
 
-func (l *UserInterface) Debug(str string) {
-	if !l.verbose {
+func Debug(str ...string) {
+	if !verbose {
 		return
 	}
 
-	fmt.Println(str)
+	fmt.Println(DebugStyle.Styled(strings.Join(str, " ")))
 }
 
-func (l *UserInterface) YesNoQuestion(question string) (bool, error) {
+func Print(str ...string) {
+	fmt.Println(PrimaryStyle.Styled(strings.Join(str, " ")))
+}
+
+func YesNoQuestion(question string) (bool, error) {
 	fmt.Println(PrimaryStyle.Styled(question), PrimaryStyle.Bold().Styled("(Y/n)"))
 
 	reader := bufio.NewReader(os.Stdin)
@@ -77,7 +80,7 @@ func (l *UserInterface) YesNoQuestion(question string) (bool, error) {
 	}
 }
 
-func (l *UserInterface) PrintSchedule(schedule config.Schedule) {
+func PrintSchedule(schedule config.Schedule) {
 	for x := time.Monday; x <= time.Saturday; x++ {
 		s := schedule.Days[x].DecentFrames.String()
 		if len(s) == 0 {
@@ -92,7 +95,7 @@ func (l *UserInterface) PrintSchedule(schedule config.Schedule) {
 	fmt.Printf("📅 %-10s %s\n", time.Sunday.String()+":", s)
 }
 
-func (l *UserInterface) PrintAmend(before time.Time, after time.Time, msg string) {
+func PrintAmend(before time.Time, after time.Time, msg string) {
 	sameDay := after.Day() == before.Day()
 	sameTime := after.Minute() == before.Minute() && after.Hour() == before.Hour()
 
@@ -131,21 +134,35 @@ func (l *UserInterface) PrintAmend(before time.Time, after time.Time, msg string
 	fmt.Println()
 }
 
-func (l *UserInterface) PrintError(err error) {
-	var commandError *internal.CommandError
-	switch {
-	case errors.As(err, &commandError):
-		fmt.Println("   ", SecondaryStyle.Bold().Styled("Command:"), PrimaryStyle.Styled(commandError.Command))
-		if len(commandError.Stdout) > 0 {
-			fmt.Println("   ", SecondaryStyle.Bold().Styled("Stdout:"), PrimaryStyle.Styled(commandError.Stdout))
-		}
-		if len(commandError.Stderr) > 0 {
-			fmt.Println("   ", SecondaryStyle.Bold().Styled("Stderr:"), PrimaryStyle.Styled(commandError.Stderr))
-		}
-	default:
-		fmt.Println("   ", PrimaryStyle.Styled(err.Error()))
+func PrintError(err error) {
+	if pp, ok := err.(PrettyPrinter); ok {
+		pp.PrettyPrint()
+		return
 	}
 
+	if unwrap, ok := err.(interface{ Unwrap() []error }); ok {
+		printErrors(unwrap.Unwrap())
+		return
+	}
+	printError(err)
+}
+
+func printErrors(errs []error) {
+	if len(errs) == 0 {
+		return
+	}
+
+	fmt.Println("❌", PrimaryStyle.Styled(errs[0].Error()))
+	for _, err := range errs[1:] {
+		if pp, ok := err.(PrettyPrinter); ok {
+			pp.PrettyPrint()
+			continue
+		}
+		fmt.Println("   ", PrimaryStyle.Styled(err.Error()))
+	}
+}
+func printError(err error) {
+	fmt.Println("❌", PrimaryStyle.Styled(err.Error()))
 }
 
 var restoreConsole func() error
