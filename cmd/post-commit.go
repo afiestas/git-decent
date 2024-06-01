@@ -14,8 +14,8 @@ type lockFile string
 
 const lockFileKey lockFile = "lockFile"
 
-var hookCmd = &cobra.Command{
-	Use:   "hook",
+var postCommitCmd = &cobra.Command{
+	Use:   "post-commit",
 	Short: "To be used by the hook",
 	Long: `The post commit hook was not designed to amend the last commit
 but instead to notify third party systems that a commit has been made.

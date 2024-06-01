@@ -93,7 +93,7 @@ maintain appearances while working during unconventional hours...`,
 }
 
 func Execute() {
-	rootCmd.AddCommand(hookCmd)
+	rootCmd.AddCommand(postCommitCmd)
 	rootCmd.AddCommand(installCdm)
 	err := rootCmd.Execute()
 	commandPostRun()
