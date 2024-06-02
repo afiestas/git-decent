@@ -93,7 +93,7 @@ func Print(str ...string) {
 }
 
 func YesNoQuestion(question string) (bool, error) {
-	fmt.Println(PrimaryStyle.Styled(question), PrimaryStyle.Bold().Styled("(Y/n)"))
+	fmt.Print(PrimaryStyle.Styled(question), PrimaryStyle.Bold().Styled("(Y/n): "))
 
 	reader := bufio.NewReader(os.Stdin)
 	input, err := reader.ReadString('\n')
