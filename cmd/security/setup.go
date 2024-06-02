@@ -28,7 +28,10 @@ func Setup() error {
 }
 
 func TearDown() error {
-	cleanup()
+	if cleanup != nil {
+		cleanup()
+	}
+
 	return nil
 }
 

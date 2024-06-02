@@ -174,5 +174,8 @@ func Setup() error {
 }
 
 func TearDown() error {
+	if restoreConsole == nil {
+		return nil
+	}
 	return restoreConsole()
 }
