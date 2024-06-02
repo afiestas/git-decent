@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/afiestas/git-decent/config"
@@ -14,7 +15,7 @@ func Amend(date time.Time, lastDate *time.Time, schedule config.Schedule) time.T
 	if lastDate == nil {
 		db.AddLine("LastDate:", "None")
 		_, dMin := schedule.ClosestDecentMinute(date)
-		db.AddLine("ClosestDecentMinute:", string(dMin))
+		db.AddLine("ClosestDecentMinute:", fmt.Sprint(dMin))
 		db.Print()
 		return date.Add(time.Duration(dMin) * time.Minute)
 	}
@@ -31,14 +32,14 @@ func Amend(date time.Time, lastDate *time.Time, schedule config.Schedule) time.T
 	if lastDate.After(date) {
 		date = *lastDate
 		db.AddLine("LastDate is after:", "true")
-		db.AddLine("AddedNoise:", string(min))
+		db.AddLine("AddedNoise:", fmt.Sprint(min))
 		date = date.Add(time.Duration(min) * time.Minute)
 	}
 
 	_, dMin := schedule.ClosestDecentMinute(date)
 	if dMin > 0 {
 		//Add the noise to avoid many commits with time 0
-		db.AddLine("AddedNoise:", string(min))
+		db.AddLine("AddedNoise:", fmt.Sprint(min))
 		date = date.Add(time.Duration(dMin+min) * time.Minute)
 	}
 
