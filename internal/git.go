@@ -299,6 +299,11 @@ func (r *GitRepo) GetConfig(option string) (string, error) {
 	return strings.TrimSpace(out), nil
 }
 
+func (r *GitRepo) GetVar(str string) (string, error) {
+	v, err := r.command("var", str)
+	return strings.TrimSpace(v), err
+}
+
 func (r *GitRepo) GetSectionOptions(name string) (map[string]string, error) {
 	ops := map[string]string{}
 	out, err := r.command("config", "--get-regexp", fmt.Sprintf("^%s.*", name))

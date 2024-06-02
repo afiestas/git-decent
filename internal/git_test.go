@@ -202,6 +202,18 @@ func TestConfig(t *testing.T) {
 	assert.Equal(t, "10:00/11:00", o)
 }
 
+func TestGetVar(t *testing.T) {
+	r := NewRepositoryBuilder(t).As(Working).MustBuild()
+
+	eEditor := "some-magic-editor"
+	os.Setenv("GIT_EDITOR", eEditor)
+
+	editor, err := r.GetVar("GIT_EDITOR")
+
+	assert.NoError(t, err)
+	assert.Equal(t, eEditor, editor)
+}
+
 func TestGetHook(t *testing.T) {
 	r := NewRepositoryBuilder(t).As(Working).MustBuild()
 	hook := filepath.Join(r.Dir, ".git/hooks/pre-commit")
