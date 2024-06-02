@@ -2,9 +2,11 @@ package ui
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"os"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/afiestas/git-decent/config"
@@ -29,6 +31,8 @@ var (
 	SoftStyle      = termenv.Style{}.Foreground(profile.Color("8"))
 )
 
+var tpl *template.Template
+
 func SetVerbose(enabled bool) {
 	verbose = enabled
 }
@@ -45,8 +49,31 @@ func Title(str string) {
 	fmt.Println(InfoStyle.Styled(str))
 }
 
+func BlinkingTitle(str string) {
+	fmt.Println(InfoStyle.Blink().Styled(str))
+}
+
 func Error(str string) {
 	fmt.Println("❌", ErrorStyle.Styled(str))
+}
+
+func Warning(str ...string) {
+	fmt.Println(warningStyle.Styled(strings.Join(str, " ")))
+}
+
+func Copy(str string) {
+	termenv.Copy(str)
+}
+
+func PrintTemplate(str string) {
+	pTpl, err := tpl.Parse(str)
+	if err != nil {
+		printError(err)
+		return
+	}
+	var buf bytes.Buffer
+	pTpl.Execute(&buf, nil)
+	fmt.Println(&buf)
 }
 
 func Debug(str ...string) {
@@ -178,4 +205,14 @@ func TearDown() error {
 		return nil
 	}
 	return restoreConsole()
+}
+
+func init() {
+	f := termenv.DefaultOutput().TemplateFuncs()
+	f["P"] = PrimaryStyle.Styled
+	f["E"] = ErrorStyle.Styled
+	f["W"] = warningStyle.Styled
+	f["S"] = SoftStyle.Styled
+
+	tpl = template.New("tlp").Funcs(f)
 }
