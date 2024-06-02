@@ -26,7 +26,7 @@ var (
 	warningStyle   = termenv.Style{}.Foreground(profile.Color("3"))
 	ErrorStyle     = termenv.Style{}.Foreground(profile.Color("9")).Bold()
 	InfoStyle      = termenv.Style{}.Foreground(profile.Color("12")).Bold()
-	DebugStyle     = termenv.Style{}.Foreground(profile.Color("8"))
+	SoftStyle      = termenv.Style{}.Foreground(profile.Color("8"))
 )
 
 func SetVerbose(enabled bool) {
@@ -54,7 +54,7 @@ func Debug(str ...string) {
 		return
 	}
 
-	fmt.Println(DebugStyle.Styled(strings.Join(str, " ")))
+	fmt.Println(SoftStyle.Styled(strings.Join(str, " ")))
 }
 
 func Print(str ...string) {
