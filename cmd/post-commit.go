@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
-	"github.com/afiestas/git-decent/internal"
 	"github.com/afiestas/git-decent/ui"
+	"github.com/afiestas/git-decent/utils"
 	u "github.com/afiestas/git-decent/utils"
 	"github.com/spf13/cobra"
 )
@@ -29,57 +28,34 @@ One of the nasty side effects of having a post-commit edit the commit is
 that the system might get into an infinity loop state since amending a commit will
 also issue a post-commit.
 This hook command adds a file semaphore to prevent the infinite loop from happening.`,
-	Hidden: true,
+	Hidden:        true,
+	SilenceErrors: true,
+	SilenceUsage:  true,
 
-	PostRun: func(cmd *cobra.Command, args []string) {
-		if fileLock, ok := cmd.Context().Value(lockFileKey).(string); ok {
-			os.Remove(fileLock)
-		}
-	},
-
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		decentContext, ok := cmd.Context().Value(decentContextKey).(*DecentContext)
 		if !ok {
-			return
+			return fmt.Errorf("couldn't obtian repo from context")
 		}
+
 		r := decentContext.gitRepo
 		s := *decentContext.schedule
 
-		log, err := r.LogWithRevision("-2")
+		commit, err := amend(r, &s)
 		if err != nil {
-			fmt.Println(ui.ErrorStyle.Styled("❌ couldn't get log from repo"))
-			ui.PrintError(err)
-			return
+			return err
 		}
 
-		if len(log) == 0 {
-			fmt.Println(ui.ErrorStyle.Styled("❌ git log seems to be empty"))
-			return
+		if commit == nil {
+			return nil
 		}
-
-		fmt.Println(ui.InfoStyle.Styled("Schedule:"))
-		ui.PrintSchedule(s)
-		fmt.Println()
-
-		var lastDate *time.Time = nil
-		if len(log) > 1 {
-			lastDate = &log[0].Date
-		}
-		commit := log[1]
-		amended := internal.Amend(commit.Date, lastDate, s)
-		ui.PrintAmend(commit.Date, amended, commit.Message)
-
-		if commit.Date == amended {
-			return
-		}
-		commit.Date = amended
 
 		err = r.AmendDate(commit)
 		if err != nil {
-			fmt.Println(ui.ErrorStyle.Styled("❌ error while amending the date"))
-			ui.PrintError(err)
-			return
+			return utils.WrapE("error while amending the date", err)
 		}
+
+		return nil
 	},
 }
 
@@ -89,10 +65,10 @@ var installPostCommit = &cobra.Command{
 	Long: `This command will try to install the post-commit hook,
 	If a hook already exists, manual edit must be done`,
 
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		decentContext, ok := cmd.Context().Value(decentContextKey).(*DecentContext)
 		if !ok {
-			return
+			return fmt.Errorf("could not get the context")
 		}
 		repo := decentContext.gitRepo
 
@@ -104,58 +80,20 @@ var installPostCommit = &cobra.Command{
 
 		hookPath := filepath.Join(repo.Dir, ".git/hooks/post-commit")
 		if _, err := os.Stat(hookPath); err == nil {
-			ui.PrintTemplate(`{{P "\nA post-commit hook already exists, we"}} {{Bold "won't"}} {{P "edit it"}}`)
-			ui.Print("instead you can add this line manually\n")
-			ui.PrintTemplate(`> git decent post-commit {{S "(Copied 📋)"}}`)
-			ui.Copy("git decent post-commit")
-			a, err := ui.YesNoQuestion("\nDo you want to manually edit the hook?")
+			err := askIfInstall("post-commit", hookPath, repo)
 			if err != nil {
-				ui.PrintError(err)
-				return
+				return u.WrapE("Could not edit the hook", err)
 			}
-
-			if !a {
-				return
-			}
-			err = openEditor(hookPath, repo)
-			if err != nil {
-				ui.PrintError(err)
-				return
-			}
-			return
+			return nil
 		}
 		ui.YesNoQuestion("\nDo you want to install the hook?")
 
-		f, err := os.Create(hookPath)
-		defer func() {
-			err := f.Close()
-			if err != nil {
-				ui.PrintError(err)
-			}
-		}()
-
+		err := installHook(hookPath, postCommitTpl)
 		if err != nil {
-			u.WrapE("Couldn't create post-commit file", err)
-			return
-		}
-		_, err = f.Write(postCommitTpl)
-		if err != nil {
-			u.WrapE("Couldn't create post-commit file", err)
-			return
-		}
-
-		fStat, err := f.Stat()
-		if err != nil {
-			u.WrapE("Couldn't create post-commit file", err)
-			return
-		}
-		newMode := fStat.Mode() | 0100
-		err = f.Chmod(newMode)
-		if err != nil {
-			u.WrapE("Couldn't create post-commit file", err)
-			return
+			return u.WrapE("could not install the hook", err)
 		}
 
 		ui.Success("Hook installed")
+		return nil
 	},
 }
