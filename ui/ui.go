@@ -57,6 +57,10 @@ func Error(str string) {
 	fmt.Println("❌", ErrorStyle.Styled(str))
 }
 
+func Success(str string) {
+	fmt.Println("✅", successStyle.Styled(str))
+}
+
 func Warning(str ...string) {
 	fmt.Println(warningStyle.Styled(strings.Join(str, " ")))
 }
