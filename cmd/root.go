@@ -99,6 +99,7 @@ func Execute() {
 	rootCmd.AddCommand(prePushCmd)
 	rootCmd.AddCommand(amendCmd)
 	rootCmd.AddCommand(installCdm)
+	rootCmd.AddCommand(configCmd)
 	err := rootCmd.Execute()
 	commandPostRun()
 
