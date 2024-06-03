@@ -40,11 +40,12 @@ var prePushCmd = &cobra.Command{
 		}
 
 		ui.Info("Unpushed commits:", fmt.Sprintf("%d", len(log)))
-		if len(log) > 0 {
-			commits := containsCommitInFuture(log)
-			for _, commit := range commits {
+		futureCommits := containsCommitInFuture(log)
+		if len(futureCommits) > 0 {
+			for _, commit := range futureCommits {
 				fmt.Println("Commit is in the future", commit.Message, commit.Date)
 			}
+			return errors.New("at least one commit is in the future")
 		}
 
 		s := decentContext.schedule
