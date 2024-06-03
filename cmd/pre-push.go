@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/afiestas/git-decent/internal"
 	"github.com/afiestas/git-decent/ui"
 	u "github.com/afiestas/git-decent/utils"
 	"github.com/spf13/cobra"
@@ -25,6 +26,24 @@ var prePushCmd = &cobra.Command{
 		decentContext, ok := cmd.Context().Value(decentContextKey).(*DecentContext)
 		if !ok {
 			return fmt.Errorf("could not get context")
+		}
+
+		r := decentContext.gitRepo
+		upstream := r.BranchUpstream(r.CurrentBranch())
+		ui.Info("Upstream branch", upstream)
+
+		aLog := fmt.Sprintf("%s...", upstream)
+		log, err := r.LogWithRevision(aLog)
+		if err != nil {
+			return u.WrapE("Unable to get the log", err)
+		}
+
+		ui.Info("Unpushed commits:", fmt.Sprintf("%d", len(log)))
+		if len(log) > 0 {
+			commits := containsCommitInFuture(log)
+			for _, commit := range commits {
+				fmt.Println("Commit is in the future", commit.Message, commit.Date)
+			}
 		}
 
 		s := decentContext.schedule
@@ -49,6 +68,18 @@ var prePushCmd = &cobra.Command{
 		ui.Success("Allwoed to push")
 		return nil
 	},
+}
+
+func containsCommitInFuture(log internal.GitLog) []internal.Commit {
+	now := time.Now()
+	commits := []internal.Commit{}
+	for _, c := range log {
+		if c.Date.After(now) {
+			commits = append(commits, *c)
+		}
+	}
+
+	return commits
 }
 
 var installPrePush = &cobra.Command{
