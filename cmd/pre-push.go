@@ -57,7 +57,7 @@ var prePushCmd = &cobra.Command{
 
 		current := now.Format("Mon 15:04")
 		ui.PrintTemplate(fmt.Sprintf(`{{Bold (W "%s")}} {{W "is not a decent time."}}`, current))
-		ui.PrintTemplate((`Use {{S git push --no-verify}} to skip the hook`))
+		ui.PrintTemplate((`Use {{S "git push --no-verify"}} to skip the hook`))
 
 		return errors.New("it is not a decent time")
 	},
