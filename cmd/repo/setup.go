@@ -53,10 +53,17 @@ func getSchedule(r *internal.GitRepo) (*config.Schedule, error) {
 			return nil, nil
 		}
 
-		initConfiguration(r)
+		err = initConfiguration(r)
+		if err != nil {
+			return nil, err
+		}
+
+		ops, err = r.GetSectionOptions("decent")
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	r.GetSectionOptions("decent")
 	s, err := config.NewScheduleFromMap(ops)
 	if err != nil {
 		return nil, err
