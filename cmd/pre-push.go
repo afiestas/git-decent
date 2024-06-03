@@ -31,7 +31,6 @@ var prePushCmd = &cobra.Command{
 
 		r := decentContext.gitRepo
 		upstream := r.BranchUpstream(r.CurrentBranch())
-		ui.Info("Upstream branch", upstream)
 
 		aLog := fmt.Sprintf("%s...", upstream)
 		log, err := r.LogWithRevision(aLog)
@@ -39,12 +38,14 @@ var prePushCmd = &cobra.Command{
 			return u.WrapE("Unable to get the log", err)
 		}
 
-		ui.Info("Unpushed commits:", fmt.Sprintf("%d", len(log)))
 		futureCommits := containsCommitInFuture(log)
 		if len(futureCommits) > 0 {
+			ui.Title(fmt.Sprintf("Commits in the future (%d):", len(futureCommits)))
 			for _, commit := range futureCommits {
-				fmt.Println("Commit is in the future", commit.Message, commit.Date)
+				cDate := commit.Date.Format("Mon 15:04")
+				ui.PrintTemplate(fmt.Sprintf(`{{ Bold (W "%s")}} {{P "%s"}}`, cDate, commit.Message))
 			}
+			ui.PrintTemplate((`Use {{S "git push --no-verify"}} to skip the hook`))
 			return errors.New("at least one commit is in the future")
 		}
 
