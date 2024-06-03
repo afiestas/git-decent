@@ -2,6 +2,7 @@ package cmd
 
 import (
 	_ "embed"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -56,17 +57,9 @@ var prePushCmd = &cobra.Command{
 
 		current := now.Format("Mon 15:04")
 		ui.PrintTemplate(fmt.Sprintf(`{{Bold (W "%s")}} {{W "is not a decent time."}}`, current))
-		answer, err := ui.YesNoQuestion("Are you sure you want to push?")
-		if err != nil {
-			return u.WrapE("couldn't get the answer", err)
-		}
+		ui.PrintTemplate((`Use {{S git push --no-verify}} to skip the hook`))
 
-		if !answer {
-			return fmt.Errorf("prevented push")
-		}
-
-		ui.Success("Allwoed to push")
-		return nil
+		return errors.New("it is not a decent time")
 	},
 }
 
