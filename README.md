@@ -4,6 +4,8 @@ Some individuals prefer to work during the night or other quiet hours, such as w
 However, this can create pressure on the rest of the team to work during those hours or
 to be around to check pull requests and commits outside of their regular working schedule.
 
+[![asciicast](https://asciinema.org/a/662392.svg)](https://asciinema.org/a/662392)
+
 ## Configuration
 The configuration for git-decent is simple and intuitive. By using a configuration file, you can define the desired "decent time frames" for commits.
 
