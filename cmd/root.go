@@ -51,6 +51,7 @@ maintain appearances while working during unconventional hours...`,
 		}
 
 		amendedCount := 0
+		var lastRealDate *time.Time = nil
 		var lastDate *time.Time = nil
 		for k, commit := range log {
 			if commit.Prev != nil {
@@ -58,7 +59,8 @@ maintain appearances while working during unconventional hours...`,
 				lastDate = &commit.Prev.Date
 			}
 			commitDate := commit.Date
-			amended := internal.Amend(commitDate, lastDate, s)
+			amended := internal.Amend(commitDate, lastDate, lastRealDate, 0, s)
+			lastRealDate = &commit.Date
 
 			ui.PrintAmend(commitDate, amended, commit.Message)
 			if amended != commitDate {

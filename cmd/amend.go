@@ -68,12 +68,16 @@ func amend(repo *internal.GitRepo, schedule *config.Schedule) (*internal.Commit,
 	ui.PrintSchedule(*schedule)
 	fmt.Println()
 
+	var lastRealDate *time.Time = nil
 	var lastDate *time.Time = nil
 	if len(log) > 1 {
 		lastDate = &log[0].Date
+		//TODO: Change this to fetch the date from the saved file
+		lastRealDate = lastDate
 	}
+
 	commit := log[1]
-	amended := internal.Amend(commit.Date, lastDate, *schedule)
+	amended := internal.Amend(commit.Date, lastDate, lastRealDate, 0, *schedule)
 	ui.PrintAmend(commit.Date, amended, commit.Message)
 
 	if commit.Date == amended {
